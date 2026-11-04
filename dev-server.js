@@ -34,4 +34,4 @@ http
     res.setHeader("Content-Type", archivo.endsWith(".html") ? "text/html; charset=utf-8" : "application/octet-stream");
     fs.createReadStream(archivo).pipe(res);
   })
-  .listen(3000, () => console.log("Caja del Fulbito en http://localhost:3000"));
+  .listen(Number(process.env.PORT) || 3000, () => console.log(`Caja del Fulbito en http://localhost:${Number(process.env.PORT) || 3000}`));

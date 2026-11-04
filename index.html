@@ -174,7 +174,8 @@ td.acc .btn+.btn{margin-left:4px}
 .filtros{display:flex;gap:6px;flex-wrap:wrap}
 .filtros button{background:transparent;border:1px solid var(--borde);border-radius:999px;padding:6px 12px;font:600 .82rem/1 var(--f-etiqueta);color:var(--tiza-2);cursor:pointer}
 .filtros button[aria-pressed="true"]{background:var(--tiza);color:var(--noche);border-color:var(--tiza)}
-.pagar-rapido{display:inline-flex;gap:4px}
+.pagar-rapido{display:inline-flex;gap:4px;margin-right:4px}
+td.acc [data-desmarcar]{margin-right:4px}
 
 /* videos */
 .video-grilla{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
@@ -206,6 +207,11 @@ td.acc .btn+.btn{margin-left:4px}
 
 /* organizador */
 .org{border:1px dashed rgba(255,212,71,.4);background:rgba(255,212,71,.04)}
+.org-dos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.campo textarea{width:100%;background:var(--noche);border:1px solid var(--borde);border-radius:10px;padding:11px 12px;font:inherit;color:inherit;resize:vertical}
+.campo textarea:focus,.campo select:focus{border-color:var(--reflector);outline:none}
+.nota,.form-vacio{margin:0;color:var(--tiza-3);font:500 .9rem/1.4 var(--f-etiqueta)}
+.form-vacio{color:var(--tiza-2);background:var(--noche);border:1px dashed var(--borde);border-radius:10px;padding:12px}
 .org-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:end}
 .pie{padding-block:30px 50px;color:var(--tiza-3);font:500 .9rem/1.5 var(--f-etiqueta);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--borde);margin-top:20px}
 .pin-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -220,7 +226,7 @@ td.acc .btn+.btn{margin-left:4px}
 .confeti{position:fixed;inset:0;pointer-events:none;z-index:40}
 
 @media (max-width:900px){
-  .grilla-3,.planilla,.video-grilla,.dos-col{grid-template-columns:minmax(0,1fr)}
+  .grilla-3,.planilla,.video-grilla,.dos-col,.org-dos{grid-template-columns:minmax(0,1fr)}
   .grilla-3 .ancho{grid-row:auto}
   .marcador{grid-template-columns:minmax(0,1fr)}
 }
@@ -315,19 +321,11 @@ td.acc .btn+.btn{margin-left:4px}
     <div class="planilla">
       <div class="panel">
         <form class="anotarse" id="form-jugador" autocomplete="off">
-          <div class="etiqueta" id="form-tit">Anotate o avisá que pagaste</div>
-          <input type="hidden" id="j-id">
+          <div class="etiqueta">Avisá que pagaste</div>
+          <p class="form-vacio" id="form-vacio" hidden>El organizador todavía no cargó la lista de este partido.</p>
           <div class="campo">
-            <label for="j-nombre">Tu nombre</label>
-            <input id="j-nombre" maxlength="40" required placeholder="Ej: Luis" list="nombres-conocidos">
-            <datalist id="nombres-conocidos"></datalist>
-          </div>
-          <div class="campo">
-            <span class="etiqueta">¿Ya pagaste?</span>
-            <div class="segmentado">
-              <input type="radio" name="estado" id="e-si" value="pagado" checked><label for="e-si">Sí, ya pagué</label>
-              <input type="radio" name="estado" id="e-no" value="debe"><label for="e-no">Todavía no</label>
-            </div>
+            <label for="j-nombre">¿Quién sos?</label>
+            <select id="j-nombre" required></select>
           </div>
           <div class="campo" id="campo-metodo">
             <span class="etiqueta">¿Cómo?</span>
@@ -341,8 +339,7 @@ td.acc .btn+.btn{margin-left:4px}
             <label for="j-monto">Monto</label>
             <input id="j-monto" type="number" inputmode="numeric" min="0" step="100" placeholder="8500">
           </div>
-          <button class="btn primario" type="submit" id="btn-guardar">Anotarme</button>
-          <button class="btn" type="button" id="btn-cancelar-edicion" hidden>Cancelar edición</button>
+          <button class="btn primario" type="submit" id="btn-guardar">Avisar que pagué</button>
         </form>
       </div>
       <div class="panel">
@@ -354,17 +351,12 @@ td.acc .btn+.btn{margin-left:4px}
     </div>
   </section>
 
-  <section class="envoltura" id="videos">
+  <section class="envoltura" id="videos" hidden>
     <div class="sec-tit"><div><div class="etiqueta">Si lo grabaron</div><h2>La repe</h2></div></div>
     <div class="video-grilla">
       <div class="pantalla" id="pantalla"></div>
       <div class="panel">
         <div class="lista-videos" id="lista-videos"></div>
-        <form id="form-video" class="anotarse">
-          <div class="campo"><label for="v-url">Link de YouTube</label><input id="v-url" type="url" required placeholder="https://youtu.be/…"></div>
-          <div class="campo"><label for="v-titulo">Título (opcional)</label><input id="v-titulo" maxlength="60" placeholder="Primer tiempo, goles, etc."></div>
-          <button class="btn" type="submit">Subir video</button>
-        </form>
       </div>
     </div>
   </section>
@@ -400,6 +392,27 @@ td.acc .btn+.btn{margin-left:4px}
         <button class="btn primario" type="submit" id="btn-partido">Crear partido</button>
         <button class="btn peligro" type="button" id="btn-borrar-partido" hidden>Borrar partido</button>
       </form>
+    </div>
+    <div class="org-dos">
+      <div class="panel org">
+        <div class="sec-tit"><div><div class="etiqueta" id="lista-partido">Partido seleccionado</div><h2>Lista de jugadores</h2></div></div>
+        <form id="form-lista" class="anotarse">
+          <div class="campo">
+            <label for="l-nombres">Pegá la lista (un nombre por renglón)</label>
+            <textarea id="l-nombres" rows="8" placeholder="1. Luis&#10;2. Diego&#10;3. Juan&#10;…"></textarea>
+          </div>
+          <p class="nota">Se agregan los que no estén. Los que ya están anotados no se tocan. Para sacar a alguien, usá Borrar en la planilla.</p>
+          <button class="btn primario" type="submit">Cargar lista</button>
+        </form>
+      </div>
+      <div class="panel org">
+        <div class="sec-tit"><div><div class="etiqueta">La repe</div><h2>Subir video</h2></div></div>
+        <form id="form-video" class="anotarse">
+          <div class="campo"><label for="v-url">Link de YouTube</label><input id="v-url" type="url" required placeholder="https://youtu.be/…"></div>
+          <div class="campo"><label for="v-titulo">Título (opcional)</label><input id="v-titulo" maxlength="60" placeholder="Primer tiempo, goles, etc."></div>
+          <button class="btn" type="submit">Subir video</button>
+        </form>
+      </div>
     </div>
   </section>
 </main>
@@ -538,6 +551,7 @@ td.acc .btn+.btn{margin-left:4px}
     renderDona();
     renderCurva();
     renderTabla();
+    renderFormPago();
     renderVideos();
     renderRanking();
     renderHistorial();
@@ -734,11 +748,8 @@ td.acc .btn+.btn{margin-left:4px}
     const st = stats(p);
     let filas = st.js.map((j, i) => ({ j, i }));
     if (filtro !== "todos") filas = filas.filter(({ j }) => j.estado === filtro);
-    // datalist con nombres de fechas anteriores
-    const conocidos = [...new Set(datos.partidos.flatMap((x) => x.jugadores.map((j) => j.nombre)))];
-    $("#nombres-conocidos").innerHTML = conocidos.map((n) => `<option value="${esc(n)}">`).join("");
     if (!filas.length) {
-      tb.innerHTML = `<tr><td colspan="7" class="vacio">${st.js.length ? "Nadie en este filtro." : "Todavía no se anotó nadie. Usá el formulario para ser el primero."}</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="7" class="vacio">${st.js.length ? "Nadie en este filtro." : esOrganizador ? "Cargá la lista de jugadores abajo, en Modo organizador." : "El organizador todavía no cargó la lista."}</td></tr>`;
       return;
     }
     tb.innerHTML = filas.map(({ j, i }) => {
@@ -750,14 +761,16 @@ td.acc .btn+.btn{margin-left:4px}
         <td>${pago ? `<span class="metodo"><i style="background:${COLOR[j.metodo]}"></i>${NOMBRE_METODO[j.metodo]}</span>` : "—"}</td>
         <td class="num">${pago ? pesos(j.monto) : pesos(p.precio)}</td>
         <td class="num" style="color:var(--tiza-3);white-space:nowrap">${pago ? esc(hora(j.pagadoEn)) : "—"}</td>
-        <td class="acc">${pago ? "" : `<span class="pagar-rapido" aria-label="Marcar que pagó"><button class="btn chico" data-pagar="mp" type="button">MP</button><button class="btn chico" data-pagar="banco" type="button">Banco</button><button class="btn chico" data-pagar="efectivo" type="button">Efvo</button></span>`}
-          <button class="btn chico" data-editar type="button">Editar</button>${esOrganizador ? `<button class="btn chico peligro" data-borrar type="button">Borrar</button>` : ""}</td></tr>`;
+        <td class="acc">${!esOrganizador ? "" : pago
+          ? `<button class="btn chico" data-desmarcar type="button">Desmarcar</button>`
+          : `<span class="pagar-rapido" aria-label="Marcar que pagó"><button class="btn chico" data-pagar="mp" type="button">MP</button><button class="btn chico" data-pagar="banco" type="button">Banco</button><button class="btn chico" data-pagar="efectivo" type="button">Efvo</button></span>`}${esOrganizador ? `<button class="btn chico peligro" data-borrar type="button">Borrar</button>` : ""}</td></tr>`;
     }).join("");
   }
 
   function renderVideos() {
     const p = partido();
     const vids = p ? p.videos || [] : [];
+    $("#videos").hidden = !vids.length;
     if (!vids.some((v) => v.yt === videoActual)) videoActual = vids.length ? vids[vids.length - 1].yt : null;
     const pant = $("#pantalla");
     const actual = pant.dataset.yt || "";
@@ -816,6 +829,8 @@ td.acc .btn+.btn{margin-left:4px}
     $("#btn-modo-editar").disabled = !p;
     if (modoOrg === "editar" && !p) modoOrg = "nuevo";
     llenarFormPartido();
+    $("#lista-partido").textContent = p ? `Partido del ${fechaLarga(p)} · ${p.jugadores.length}/${p.cupo} anotados` : "Primero creá un partido";
+    document.querySelectorAll("#form-lista button, #form-video button").forEach((b) => (b.disabled = !p));
   }
 
   function llenarFormPartido() {
@@ -864,7 +879,7 @@ td.acc .btn+.btn{margin-left:4px}
       const j = p.jugadores.find((x) => x.id === fila.dataset.id);
       if (!j) return;
       if (t.dataset.pagar) return guardarJugador({ id: j.id, nombre: j.nombre, estado: "pagado", metodo: t.dataset.pagar, monto: p.precio }, `${j.nombre} pagó`);
-      if ("editar" in t.dataset) return editarJugador(j);
+      if ("desmarcar" in t.dataset) return guardarJugador({ id: j.id, nombre: j.nombre, estado: "debe" }, `${j.nombre} vuelve a deber`);
       if ("borrar" in t.dataset) {
         if (t.dataset.confirmar !== "1") { t.dataset.confirmar = "1"; t.textContent = "¿Seguro?"; setTimeout(() => { t.dataset.confirmar = ""; t.textContent = "Borrar"; }, 3000); return; }
         try { await api("borrarJugador", { partidoId: p.id, id: j.id }); toast(`Saqué a ${j.nombre}`); cargar(); } catch (err) { toast(err.message, true); }
@@ -878,7 +893,7 @@ td.acc .btn+.btn{margin-left:4px}
     if (t.id === "btn-copiar-link") {
       const pp = partido();
       const url = location.origin + location.pathname + (pp ? "#p-" + pp.id : "");
-      return copiar(pp ? `⚽ Fútbol ${fechaLarga(pp)} ${pp.hora} hs. Anotate y avisá si pagaste acá: ${url}` : url, "Link copiado. Pegalo en el grupo.");
+      return copiar(pp ? `⚽ Fútbol ${fechaLarga(pp)} ${pp.hora} hs. Avisá que pagaste acá: ${url}` : url, "Link copiado. Pegalo en el grupo.");
     }
     if (t.id === "btn-copiar-resumen") {
       const pp = partido(); if (!pp) return;
@@ -904,43 +919,35 @@ td.acc .btn+.btn{margin-left:4px}
       return;
     }
     if (t.id === "btn-salir-org") { store.del("pin"); esOrganizador = false; render(); return; }
-    if (t.id === "btn-cancelar-edicion") { limpiarForm(); return; }
   });
 
-  // formulario de jugador
+  // formulario "Avisá que pagaste": solo se elige un nombre de la lista del organizador
   const formJ = $("#form-jugador");
-  function actualizarCamposPago() {
-    const pago = formJ.estado.value === "pagado";
-    $("#campo-metodo").hidden = !pago;
-    $("#campo-monto").hidden = !pago;
-    $("#btn-guardar").textContent = $("#j-id").value ? "Guardar cambios" : pago ? "Avisar que pagué" : "Anotarme";
-  }
-  formJ.addEventListener("change", actualizarCamposPago);
-  function limpiarForm() {
-    $("#j-id").value = "";
-    $("#form-tit").textContent = "Anotate o avisá que pagaste";
-    $("#btn-cancelar-edicion").hidden = true;
-    $("#j-nombre").value = store.get("miNombre") || "";
-    $("#j-monto").value = "";
-    actualizarCamposPago();
-  }
-  function editarJugador(j) {
-    $("#j-id").value = j.id;
-    $("#j-nombre").value = j.nombre;
-    formJ.estado.value = j.estado;
-    if (j.metodo) formJ.metodo.value = j.metodo;
-    $("#j-monto").value = j.monto || "";
-    $("#form-tit").textContent = `Editando a ${j.nombre}`;
-    $("#btn-cancelar-edicion").hidden = false;
-    actualizarCamposPago();
-    $("#j-nombre").focus();
+  function renderFormPago() {
+    const p = partido();
+    const sel = $("#j-nombre");
+    const js = p ? p.jugadores : [];
+    const vacio = !js.length;
+    $("#form-vacio").hidden = !vacio;
+    formJ.querySelectorAll(".campo, #btn-guardar").forEach((el) => (el.hidden = vacio));
+    if (vacio) return;
+    if (formJ.contains(document.activeElement)) return; // no pisar lo que está eligiendo
+    const elegido = sel.value || store.get("miNombre") || "";
+    const deben = js.filter((j) => j.estado === "debe");
+    const pagaron = js.filter((j) => j.estado === "pagado");
+    sel.innerHTML = `<option value="">Elegí tu nombre</option>`
+      + (deben.length ? `<optgroup label="Falta pagar">${deben.map((j) => `<option value="${esc(j.id)}">${esc(j.nombre)}</option>`).join("")}</optgroup>` : "")
+      + (pagaron.length ? `<optgroup label="Ya pagaron">${pagaron.map((j) => `<option value="${esc(j.id)}" disabled>${esc(j.nombre)} ✓</option>`).join("")}</optgroup>` : "");
+    const previo = js.find((j) => j.id === elegido || norm(j.nombre) === norm(elegido));
+    sel.value = previo && previo.estado === "debe" ? previo.id : "";
+    $("#j-monto").placeholder = p.precio ? String(p.precio) : "";
   }
   async function guardarJugador(j, msg) {
     const p = partido();
     if (!p) return toast("Primero el organizador tiene que crear el partido.", true);
     try {
       const r = await api("guardarJugador", { partidoId: p.id, jugador: j });
-      toast(msg || (r.actualizado ? `Listo, actualicé a ${r.jugador.nombre}` : `Listo, ${r.jugador.nombre} quedó anotado`));
+      toast(msg || `Listo, ${r.jugador.nombre} quedó como pagado`);
       await cargar();
       return true;
     } catch (err) { toast(err.message, true); return false; }
@@ -948,18 +955,29 @@ td.acc .btn+.btn{margin-left:4px}
   formJ.addEventListener("submit", async (e) => {
     e.preventDefault();
     const p = partido();
-    const nombre = $("#j-nombre").value.trim();
-    if (!nombre) return;
-    const editando = !!$("#j-id").value;
-    if (!editando) store.set("miNombre", nombre);
+    const j = p && p.jugadores.find((x) => x.id === $("#j-nombre").value);
+    if (!j) return toast("Elegí tu nombre de la lista.", true);
+    store.set("miNombre", j.nombre);
     const ok = await guardarJugador({
-      id: $("#j-id").value || undefined,
-      nombre,
-      estado: formJ.estado.value,
+      id: j.id,
+      nombre: j.nombre,
+      estado: "pagado",
       metodo: formJ.metodo.value,
-      monto: Number($("#j-monto").value) || (p ? p.precio : 0),
-    });
-    if (ok) limpiarForm();
+      monto: Number($("#j-monto").value) || p.precio,
+    }, `¡Gracias, ${j.nombre}! Quedó anotado tu pago`);
+    if (ok) { $("#j-monto").value = ""; document.activeElement.blur(); renderFormPago(); }
+  });
+
+  // lista de jugadores (organizador)
+  $("#form-lista").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const p = partido(); if (!p) return;
+    try {
+      const r = await api("cargarLista", { partidoId: p.id, nombres: $("#l-nombres").value });
+      $("#l-nombres").value = "";
+      toast(`Listo: ${r.agregados} agregados${r.yaEstaban ? `, ${r.yaEstaban} ya estaban` : ""}`);
+      await cargar();
+    } catch (err) { toast(err.message, true); }
   });
 
   // video
@@ -1017,7 +1035,6 @@ td.acc .btn+.btn{margin-left:4px}
 
   // arranque
   if (store.get("pin")) api("verificarPin").then(() => { esOrganizador = true; render(); }).catch(() => store.del("pin"));
-  limpiarForm();
   cargar();
 })();
 </script>

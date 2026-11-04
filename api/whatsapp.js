@@ -155,10 +155,22 @@ async function procesar(m, pagina) {
   const r = await interpretar({ m, p, conocido, pendiente, adjunto });
   const canon = (nombre) => p.jugadores.find((j) => norm(j.nombre) === norm(nombre))?.nombre || txt(nombre, 40);
 
-  let quien = conocido || null;
+  if (!p.jugadores.length) {
+    return enviar(m, "El organizador todavía no cargó la lista de este partido. Apenas la cargue, mandame el comprobante de nuevo.");
+  }
+  const enLista = (nombre) => p.jugadores.find((j) => norm(j.nombre) === norm(nombre));
+  const debenTexto = () => p.jugadores.filter((j) => j.estado === "debe").map((j) => j.nombre).join(", ");
+
+  // solo recordamos el teléfono si el nombre está en la lista del organizador
+  let quien = conocido && enLista(conocido) ? enLista(conocido).nombre : null;
   if (r.nombre_remitente) {
-    quien = canon(r.nombre_remitente);
-    await redis([["HSET", kTel, m.de, quien]]);
+    const j = enLista(r.nombre_remitente);
+    if (j) {
+      quien = j.nombre;
+      await redis([["HSET", kTel, m.de, quien]]);
+    } else if (r.intencion === "nombre") {
+      return enviar(m, `No encuentro a "${txt(r.nombre_remitente, 40)}" en la lista 🤔 Mandame el nombre tal cual figura. Faltan pagar: ${debenTexto() || "nadie"}.`);
+    }
   }
 
   // pagos de esta vez + los que esperaban saber de quién eran
@@ -172,7 +184,7 @@ async function procesar(m, pagina) {
   if (pagos.some((x) => !x.jugador)) {
     await redis([["SET", kPend(m.de), JSON.stringify(pagos), "EX", "86400"]]);
     const total = pagos.reduce((s, x) => s + (x.monto || 0), 0);
-    return enviar(m, `Recibí el pago${total ? ` de ${pesos(total)}` : ""} 👍 ¿A nombre de quién lo anoto? Mandame el nombre como figura en la lista.`);
+    return enviar(m, `Recibí el pago${total ? ` de ${pesos(total)}` : ""} 👍 ¿A nombre de quién lo anoto? Mandame el nombre como figura en la lista. Faltan pagar: ${debenTexto() || "nadie"}.`);
   }
 
   if (pagos.length) {
@@ -185,7 +197,7 @@ async function procesar(m, pagina) {
           metodo: METODOS.includes(x.metodo) ? x.metodo : "mp",
           monto: num(x.monto) || p.precio,
           origen: "whatsapp",
-        });
+        }, { soloLista: true });
         lineas.push(
           g.yaPagado
             ? `🔁 ${g.jugador.nombre} ya figuraba como pagado.`

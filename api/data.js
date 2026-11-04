@@ -2,7 +2,7 @@
 // GET  /api/data            -> todos los partidos con sus jugadores
 // POST /api/data {accion}   -> guardar/borrar partidos, jugadores y videos
 import {
-  redis, K_PARTIDOS, kJug, almacenamiento, txt, limpiarPartido, leerPartido, leerTodo, guardarJugador,
+  redis, K_PARTIDOS, kJug, almacenamiento, txt, limpiarPartido, leerPartido, leerTodo, guardarJugador, cargarLista,
 } from "../lib/store.js";
 
 const PIN = (process.env.ADMIN_PIN || "").trim();
@@ -52,8 +52,23 @@ export default async function handler(req, res) {
       case "guardarJugador": {
         const p = await leerPartido(body.partidoId);
         if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
-        const r = await guardarJugador(p, { ...(body.jugador || {}), origen: "web" });
+        // sin PIN solo se puede avisar que pagaste, y solo si estás en la lista
+        const r = await guardarJugador(p, { ...(body.jugador || {}), origen: pinOk ? "organizador" : "web" }, { soloLista: !pinOk });
         return res.status(200).json({ ok: true, jugador: r.jugador, actualizado: r.actualizado });
+      }
+
+      case "cargarLista": {
+        exigePin();
+        const p = await leerPartido(body.partidoId);
+        if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
+        const nombres = String(body.nombres || "")
+          .split(/[\n,;]+/)
+          .map((s) => s.replace(/^\s*\d+\s*[.\-)]?\s*/, "").replace(/[✅❌💵⚽]/gu, "").trim())
+          .filter(Boolean)
+          .slice(0, 60);
+        if (!nombres.length) return res.status(400).json({ error: "Pegá al menos un nombre." });
+        const r = await cargarLista(p, nombres);
+        return res.status(200).json({ ok: true, ...r });
       }
 
       case "borrarJugador": {
@@ -63,6 +78,7 @@ export default async function handler(req, res) {
       }
 
       case "agregarVideo": {
+        exigePin();
         const p = await leerPartido(body.partidoId);
         if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
         const yt = youtubeId(body.url);
