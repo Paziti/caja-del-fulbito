@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caja del Fulbito</title>
+<meta name="description" content="Quién pagó el fútbol, en vivo.">
+<meta name="theme-color" content="#07140f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2307140f'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23ffd447' stroke-width='2.5'/%3E%3Cpath d='M16 7v18M7 16h18' stroke='%23ffd447' stroke-width='1.5'/%3E%3C/svg%3E">
+<style>
+/* Concepto: partido nocturno en cancha de sintético. Césped con franjas de corte,
+   líneas de tiza, tablero electrónico con dígitos amarillos de reflector.
+   Rojo = tarjeta (debe). Celeste/violeta/verde = cómo pagó. */
+:root{
+  --noche:#07140f;
+  --cesped:#0c2219;
+  --cesped-2:#113024;
+  --borde:#1f4a38;
+  --tiza:#eef5ef;
+  --tiza-2:#a9c4b4;
+  --tiza-3:#6f8f7e;
+  --reflector:#ffd447;
+  --reflector-suave:rgba(255,212,71,.14);
+  --roja:#ff5d55;
+  --mp:#5cc8ff;
+  --banco:#b9a0ff;
+  --efectivo:#7fe08a;
+  --tablero:#030c08;
+  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --f-cuerpo:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-etiqueta:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --radio:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--noche)}
+body{
+  margin:0;min-height:100vh;color:var(--tiza);font:16px/1.5 var(--f-cuerpo);
+  background:
+    radial-gradient(900px 500px at 8% -10%,rgba(255,232,150,.10),transparent 60%),
+    radial-gradient(900px 500px at 92% -10%,rgba(255,232,150,.10),transparent 60%),
+    repeating-linear-gradient(90deg,#08170f 0 140px,#0a1b13 140px 280px),
+    var(--noche);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--noche)}
+a{color:var(--reflector)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--reflector);outline-offset:2px;border-radius:6px}
+.envoltura{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.etiqueta{font:600 .78rem/1 var(--f-etiqueta);letter-spacing:.12em;text-transform:uppercase;color:var(--tiza-3)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- barra superior ---------- */
+.barra{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(7,20,15,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--borde)}
+.barra .envoltura{display:flex;align-items:center;gap:14px;min-height:62px;flex-wrap:wrap;padding-block:8px}
+.marca{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--tiza);margin-right:auto}
+.marca svg{flex:none}
+.marca b{font:900 1.45rem/1 var(--f-display);letter-spacing:.02em;text-transform:uppercase}
+.marca b span{color:var(--reflector)}
+.selector{display:flex;align-items:center;gap:8px}
+.selector select{background:var(--cesped);border:1px solid var(--borde);border-radius:10px;padding:8px 12px;max-width:62vw}
+.vivo{display:flex;align-items:center;gap:7px;font:600 .8rem/1 var(--f-etiqueta);letter-spacing:.08em;text-transform:uppercase;color:var(--tiza-2)}
+.vivo i{width:8px;height:8px;border-radius:50%;background:var(--efectivo);box-shadow:0 0 0 0 rgba(127,224,138,.6);animation:latido 2s infinite}
+.vivo.caido i{background:var(--roja);animation:none}
+@keyframes latido{70%{box-shadow:0 0 0 8px rgba(127,224,138,0)}100%{box-shadow:0 0 0 0 rgba(127,224,138,0)}}
+
+/* ---------- tablero (hero) ---------- */
+.hero{padding-block:28px 8px}
+.tablero{
+  position:relative;background:var(--tablero);border:1px solid #234f3c;border-radius:22px;overflow:hidden;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.8),inset 0 0 0 6px #06150e,inset 0 0 0 7px #1a3b2d;
+  padding:clamp(18px,3.5vw,34px);
+}
+.tablero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1.2px) 0 0/5px 5px}
+.tablero-sup{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.partido-dia{font:900 clamp(2rem,5.5vw,3.6rem)/.95 var(--f-display);text-transform:uppercase;letter-spacing:.01em;text-wrap:balance;margin:6px 0 0}
+.partido-meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;color:var(--tiza-2);font:500 1rem/1.3 var(--f-etiqueta)}
+.partido-meta b{color:var(--tiza);font-weight:700}
+.acciones-hero{display:flex;gap:8px;flex-wrap:wrap}
+.marcador{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(16px,4vw,48px);margin-top:26px;align-items:end}
+.led{font:900 clamp(4.2rem,15vw,9.5rem)/.82 var(--f-display);color:var(--reflector);text-shadow:0 0 24px rgba(255,212,71,.45),0 0 2px rgba(255,212,71,.9);font-variant-numeric:tabular-nums;letter-spacing:-.01em;display:flex;align-items:baseline;gap:.08em}
+.led small{font-size:.42em;color:var(--tiza-3);text-shadow:none}
+.led-sub{font:700 1.05rem/1.2 var(--f-etiqueta);letter-spacing:.14em;text-transform:uppercase;color:var(--tiza-2);margin-top:10px}
+.plata{display:grid;gap:14px}
+.plata-fila{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px dashed #1e4636;padding-bottom:10px}
+.plata-fila:last-child{border:0;padding:0}
+.plata-fila strong{font:800 clamp(1.6rem,4vw,2.4rem)/1 var(--f-display);font-variant-numeric:tabular-nums}
+.plata-fila.falta strong{color:var(--roja)}
+.plata-fila.ok strong{color:var(--efectivo)}
+.celdas{display:grid;grid-template-columns:repeat(var(--n,18),minmax(0,1fr));gap:4px;margin-top:26px}
+.celda{height:22px;border-radius:4px;background:#0d2219;border:1px solid #1a3b2d;position:relative;transition:background .4s,box-shadow .4s}
+.celda.mp{background:var(--mp);border-color:transparent;box-shadow:0 0 10px rgba(92,200,255,.35)}
+.celda.banco{background:var(--banco);border-color:transparent;box-shadow:0 0 10px rgba(185,160,255,.35)}
+.celda.efectivo{background:var(--efectivo);border-color:transparent;box-shadow:0 0 10px rgba(127,224,138,.35)}
+.celda.debe{background:repeating-linear-gradient(135deg,rgba(255,93,85,.85) 0 5px,rgba(255,93,85,.45) 5px 10px);border-color:transparent}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font:600 .82rem/1 var(--f-etiqueta);color:var(--tiza-2);letter-spacing:.04em}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.destacados{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip-dest{display:inline-flex;align-items:center;gap:8px;background:var(--reflector-suave);border:1px solid rgba(255,212,71,.3);color:var(--tiza);border-radius:999px;padding:6px 12px;font:600 .88rem/1.1 var(--f-etiqueta)}
+.chip-dest b{color:var(--reflector)}
+
+/* ---------- botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:10px 16px;border:1px solid var(--borde);background:var(--cesped-2);font:700 .95rem/1 var(--f-etiqueta);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;text-decoration:none;color:var(--tiza);transition:transform .12s,background .2s,border-color .2s}
+.btn:hover{border-color:var(--tiza-3)}
+.btn:active{transform:translateY(1px)}
+.btn.primario{background:var(--reflector);border-color:var(--reflector);color:#1a1400}
+.btn.primario:hover{background:#ffe07a}
+.btn.chico{padding:7px 11px;font-size:.8rem;border-radius:8px}
+.btn.peligro{border-color:rgba(255,93,85,.5);color:var(--roja);background:transparent}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------- secciones ---------- */
+section{padding-block:26px}
+.sec-tit{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.sec-tit h2{font:900 clamp(1.7rem,4vw,2.4rem)/1 var(--f-display);text-transform:uppercase;margin:4px 0 0;letter-spacing:.01em}
+.panel{background:linear-gradient(180deg,var(--cesped-2),var(--cesped));border:1px solid var(--borde);border-radius:var(--radio);padding:18px;min-width:0}
+.grilla-3{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.grilla-3 .ancho{grid-row:span 2}
+.vacio{color:var(--tiza-3);text-align:center;padding:28px 10px;font:500 1rem/1.4 var(--f-etiqueta)}
+
+/* cancha */
+.cancha svg{width:100%;height:auto;display:block}
+.cancha .camiseta{transition:transform .25s}
+.cancha g.slot:hover .camiseta{transform:translateY(-2px)}
+.cancha text{font-family:var(--f-etiqueta)}
+
+/* dona */
+.dona{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:center}
+.dona svg{width:150px;height:150px}
+.dona ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.dona li{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:8px;align-items:center;font:600 .95rem/1.2 var(--f-etiqueta)}
+.dona li i{width:12px;height:12px;border-radius:3px}
+.dona li small{display:block;color:var(--tiza-3);font-weight:500}
+.dona li b{font:800 1.25rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+
+/* curva */
+.curva svg{width:100%;height:auto;display:block}
+
+/* planilla */
+.planilla{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;align-items:start}
+form.anotarse{display:grid;gap:14px}
+.campo{display:grid;gap:6px}
+.campo label,.campo .etiqueta{font:600 .8rem/1 var(--f-etiqueta);letter-spacing:.1em;text-transform:uppercase;color:var(--tiza-2)}
+.campo input,.campo select{width:100%;background:var(--noche);border:1px solid var(--borde);border-radius:10px;padding:11px 12px;font-size:1rem}
+.campo input:focus{border-color:var(--reflector);outline:none}
+.segmentado{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.segmentado input{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+.segmentado label{display:flex;align-items:center;justify-content:center;text-align:center;gap:6px;padding:10px 6px;border-radius:10px;border:1px solid var(--borde);background:var(--noche);cursor:pointer;font:700 .88rem/1.1 var(--f-etiqueta);letter-spacing:.02em;text-transform:none;color:var(--tiza-2);min-height:44px}
+.segmentado input:checked+label{border-color:var(--reflector);color:var(--tiza);background:var(--reflector-suave)}
+.segmentado input:focus-visible+label{outline:2px solid var(--reflector);outline-offset:2px}
+.segmentado .punto{width:9px;height:9px;border-radius:50%}
+.tabla-cont{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th{font:600 .74rem/1 var(--f-etiqueta);letter-spacing:.12em;text-transform:uppercase;color:var(--tiza-3);text-align:left;padding:10px 8px;border-bottom:1px solid var(--borde)}
+td{padding:10px 8px;border-bottom:1px solid rgba(31,74,56,.55);vertical-align:middle}
+tr.yo td{background:rgba(255,212,71,.06)}
+td.n{font:800 1.1rem/1 var(--f-display);color:var(--tiza-3);width:34px}
+td.nombre{font-weight:600}
+td.nombre small{display:block;color:var(--reflector);font:600 .72rem/1.2 var(--f-etiqueta);letter-spacing:.1em;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font:700 .78rem/1.1 var(--f-etiqueta);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.pill.pagado{background:rgba(127,224,138,.14);color:var(--efectivo)}
+.pill.debe{background:rgba(255,93,85,.14);color:var(--roja)}
+.metodo{display:inline-flex;align-items:center;gap:6px;font:600 .9rem/1 var(--f-etiqueta);white-space:nowrap}
+.metodo i{width:9px;height:9px;border-radius:50%}
+td.acc{text-align:right;white-space:nowrap}
+td.acc .btn+.btn{margin-left:4px}
+.filtros{display:flex;gap:6px;flex-wrap:wrap}
+.filtros button{background:transparent;border:1px solid var(--borde);border-radius:999px;padding:6px 12px;font:600 .82rem/1 var(--f-etiqueta);color:var(--tiza-2);cursor:pointer}
+.filtros button[aria-pressed="true"]{background:var(--tiza);color:var(--noche);border-color:var(--tiza)}
+.pagar-rapido{display:inline-flex;gap:4px}
+
+/* videos */
+.video-grilla{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+.pantalla{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:var(--radio);overflow:hidden;background:#000;border:1px solid var(--borde)}
+.pantalla iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pantalla .sin-video{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:var(--tiza-3);font:600 1.05rem/1.4 var(--f-etiqueta);background:radial-gradient(circle at 50% 40%,#0f2d21,#020805)}
+.pantalla .sin-video b{display:block;font:900 2.2rem/1 var(--f-display);color:var(--tiza);text-transform:uppercase;margin-bottom:6px}
+.lista-videos{display:grid;gap:8px;margin-bottom:14px}
+.lista-videos button.v{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--noche);border:1px solid var(--borde);border-radius:10px;padding:8px;cursor:pointer}
+.lista-videos button.v[aria-current="true"]{border-color:var(--reflector)}
+.lista-videos img{width:84px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;flex:none;background:#000}
+.lista-videos span{font:600 .95rem/1.25 var(--f-etiqueta);min-width:0;overflow-wrap:anywhere}
+
+/* ranking + historial */
+.dos-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.historial{display:grid;gap:10px}
+.fecha-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--noche);border:1px solid var(--borde);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left;width:100%}
+.fecha-card[aria-current="true"]{border-color:var(--reflector);box-shadow:0 0 0 1px var(--reflector) inset}
+.fecha-card .dia{font:900 1.9rem/.9 var(--f-display);text-align:center;min-width:44px}
+.fecha-card .dia small{display:block;font:700 .7rem/1.2 var(--f-etiqueta);letter-spacing:.12em;text-transform:uppercase;color:var(--tiza-3)}
+.fecha-card .barrita{height:6px;border-radius:3px;background:#0d2219;overflow:hidden;margin-top:7px}
+.fecha-card .barrita i{display:block;height:100%;background:var(--efectivo)}
+.fecha-card .pct{font:800 1.3rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+.fecha-card .info{font:600 .95rem/1.2 var(--f-etiqueta)}
+.fecha-card .info small{color:var(--tiza-3);font-weight:500}
+.ranking table{min-width:0}
+.ranking td.deuda{color:var(--roja);font-weight:700}
+.ranking td.cero{color:var(--tiza-3)}
+
+/* organizador */
+.org{border:1px dashed rgba(255,212,71,.4);background:rgba(255,212,71,.04)}
+.org-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:end}
+.pie{padding-block:30px 50px;color:var(--tiza-3);font:500 .9rem/1.5 var(--f-etiqueta);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--borde);margin-top:20px}
+.pin-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pin-form input{background:var(--noche);border:1px solid var(--borde);border-radius:8px;padding:7px 10px;width:110px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,140%);background:var(--tiza);color:var(--noche);padding:12px 18px;border-radius:12px;font:700 .95rem/1.2 var(--f-etiqueta);box-shadow:0 18px 40px rgba(0,0,0,.5);transition:transform .3s;z-index:50;max-width:calc(100% - 32px)}
+.toast.ver{transform:translate(-50%,0)}
+.toast.error{background:var(--roja);color:#fff}
+
+/* gol: festejo cuando se completa la caja */
+.confeti{position:fixed;inset:0;pointer-events:none;z-index:40}
+
+@media (max-width:900px){
+  .grilla-3,.planilla,.video-grilla,.dos-col{grid-template-columns:minmax(0,1fr)}
+  .grilla-3 .ancho{grid-row:auto}
+  .marcador{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:520px){
+  .celdas{gap:2px}.celda{height:16px;border-radius:3px}
+  .dona{grid-template-columns:110px minmax(0,1fr)}.dona svg{width:110px;height:110px}
+  .vivo span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <div class="envoltura">
+    <a class="marca" href="#" aria-label="Caja del Fulbito, inicio">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="8" fill="#0c2219" stroke="#1f4a38"/><circle cx="17" cy="17" r="8.5" fill="none" stroke="#ffd447" stroke-width="2"/><path d="M17 4v26M4 17h5M25 17h5" stroke="#eef5ef" stroke-width="1.4" opacity=".7"/><circle cx="17" cy="17" r="1.8" fill="#ffd447"/></svg>
+      <b>Caja del <span>Fulbito</span></b>
+    </a>
+    <div class="selector">
+      <label class="etiqueta" for="sel-partido">Fecha</label>
+      <select id="sel-partido" aria-label="Elegir partido"></select>
+    </div>
+    <div class="vivo" id="vivo" role="status"><i></i><span id="vivo-txt">Conectando</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="envoltura hero">
+    <div class="tablero" id="tablero">
+      <div class="tablero-sup">
+        <div>
+          <div class="etiqueta" id="t-eyebrow">Próximo partido</div>
+          <h1 class="partido-dia" id="t-dia">Cargando la fecha…</h1>
+          <div class="partido-meta" id="t-meta"></div>
+        </div>
+        <div class="acciones-hero">
+          <a class="btn primario" href="#planilla">Ya pagué</a>
+          <button class="btn" id="btn-copiar-link" type="button">Copiar link</button>
+          <button class="btn" id="btn-copiar-resumen" type="button">Copiar resumen</button>
+        </div>
+      </div>
+      <div class="marcador">
+        <div>
+          <div class="led" aria-live="polite"><span id="t-pagaron">0</span><small>/</small><span id="t-cupo">18</span></div>
+          <div class="led-sub" id="t-led-sub">Pagaron</div>
+        </div>
+        <div class="plata">
+          <div class="plata-fila ok"><span class="etiqueta">Recaudado</span><strong id="t-recaudado">$0</strong></div>
+          <div class="plata-fila"><span class="etiqueta">Hay que juntar</span><strong id="t-objetivo">$0</strong></div>
+          <div class="plata-fila falta"><span class="etiqueta">Falta</span><strong id="t-falta">$0</strong></div>
+        </div>
+      </div>
+      <div class="celdas" id="t-celdas" aria-hidden="true"></div>
+      <div class="leyenda">
+        <span><i style="background:var(--mp)"></i>Mercado Pago</span>
+        <span><i style="background:var(--banco)"></i>Banco</span>
+        <span><i style="background:var(--efectivo)"></i>Efectivo</span>
+        <span><i style="background:var(--roja)"></i>Debe</span>
+        <span><i style="background:#0d2219;border:1px solid #1a3b2d"></i>Lugar libre</span>
+      </div>
+      <div class="destacados" id="t-destacados"></div>
+    </div>
+  </div>
+
+  <section class="envoltura" id="estadisticas">
+    <div class="grilla-3">
+      <div class="panel cancha ancho">
+        <div class="sec-tit"><div><div class="etiqueta">Formación</div><h2>La cancha</h2></div><span class="etiqueta" id="cancha-nota"></span></div>
+        <div id="cancha"></div>
+      </div>
+      <div class="panel">
+        <div class="sec-tit"><div><div class="etiqueta">Medios de pago</div><h2>Cómo pagaron</h2></div></div>
+        <div class="dona" id="dona"></div>
+      </div>
+      <div class="panel curva">
+        <div class="sec-tit"><div><div class="etiqueta">Plata acumulada</div><h2>Cómo fue entrando</h2></div></div>
+        <div id="curva"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="envoltura" id="planilla">
+    <div class="sec-tit"><div><div class="etiqueta">Planilla</div><h2>Quién pagó</h2></div>
+      <div class="filtros" role="group" aria-label="Filtrar planilla">
+        <button type="button" data-f="todos" aria-pressed="true">Todos</button>
+        <button type="button" data-f="pagado" aria-pressed="false">Pagaron</button>
+        <button type="button" data-f="debe" aria-pressed="false">Deben</button>
+      </div>
+    </div>
+    <div class="planilla">
+      <div class="panel">
+        <form class="anotarse" id="form-jugador" autocomplete="off">
+          <div class="etiqueta" id="form-tit">Anotate o avisá que pagaste</div>
+          <input type="hidden" id="j-id">
+          <div class="campo">
+            <label for="j-nombre">Tu nombre</label>
+            <input id="j-nombre" maxlength="40" required placeholder="Ej: Luis" list="nombres-conocidos">
+            <datalist id="nombres-conocidos"></datalist>
+          </div>
+          <div class="campo">
+            <span class="etiqueta">¿Ya pagaste?</span>
+            <div class="segmentado">
+              <input type="radio" name="estado" id="e-si" value="pagado" checked><label for="e-si">Sí, ya pagué</label>
+              <input type="radio" name="estado" id="e-no" value="debe"><label for="e-no">Todavía no</label>
+            </div>
+          </div>
+          <div class="campo" id="campo-metodo">
+            <span class="etiqueta">¿Cómo?</span>
+            <div class="segmentado">
+              <input type="radio" name="metodo" id="m-mp" value="mp" checked><label for="m-mp"><span class="punto" style="background:var(--mp)"></span>Mercado Pago</label>
+              <input type="radio" name="metodo" id="m-banco" value="banco"><label for="m-banco"><span class="punto" style="background:var(--banco)"></span>Banco</label>
+              <input type="radio" name="metodo" id="m-ef" value="efectivo"><label for="m-ef"><span class="punto" style="background:var(--efectivo)"></span>Efectivo</label>
+            </div>
+          </div>
+          <div class="campo" id="campo-monto">
+            <label for="j-monto">Monto</label>
+            <input id="j-monto" type="number" inputmode="numeric" min="0" step="100" placeholder="8500">
+          </div>
+          <button class="btn primario" type="submit" id="btn-guardar">Anotarme</button>
+          <button class="btn" type="button" id="btn-cancelar-edicion" hidden>Cancelar edición</button>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="tabla-cont"><table>
+          <thead><tr><th>#</th><th>Jugador</th><th>Estado</th><th>Cómo</th><th>Monto</th><th>Cuándo</th><th></th></tr></thead>
+          <tbody id="tabla"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="envoltura" id="videos">
+    <div class="sec-tit"><div><div class="etiqueta">Si lo grabaron</div><h2>La repe</h2></div></div>
+    <div class="video-grilla">
+      <div class="pantalla" id="pantalla"></div>
+      <div class="panel">
+        <div class="lista-videos" id="lista-videos"></div>
+        <form id="form-video" class="anotarse">
+          <div class="campo"><label for="v-url">Link de YouTube</label><input id="v-url" type="url" required placeholder="https://youtu.be/…"></div>
+          <div class="campo"><label for="v-titulo">Título (opcional)</label><input id="v-titulo" maxlength="60" placeholder="Primer tiempo, goles, etc."></div>
+          <button class="btn" type="submit">Subir video</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="envoltura" id="tabla-general">
+    <div class="dos-col">
+      <div class="panel ranking">
+        <div class="sec-tit"><div><div class="etiqueta">Todas las fechas</div><h2>Tabla de posiciones</h2></div></div>
+        <div class="tabla-cont"><table>
+          <thead><tr><th>Jugador</th><th>Jugó</th><th>Pagó</th><th>Debe</th></tr></thead>
+          <tbody id="ranking"></tbody>
+        </table></div>
+      </div>
+      <div class="panel">
+        <div class="sec-tit"><div><div class="etiqueta">Historial</div><h2>Fechas</h2></div></div>
+        <div class="historial" id="historial"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="envoltura" id="organizador" hidden>
+    <div class="panel org">
+      <div class="sec-tit"><div><div class="etiqueta">Modo organizador</div><h2 id="org-tit">Nuevo partido</h2></div>
+        <div class="filtros"><button type="button" id="btn-modo-nuevo" aria-pressed="true">Nuevo</button><button type="button" id="btn-modo-editar" aria-pressed="false">Editar el actual</button></div>
+      </div>
+      <form id="form-partido" class="org-form">
+        <div class="campo"><label for="p-fecha">Fecha</label><input id="p-fecha" type="date" required></div>
+        <div class="campo"><label for="p-hora">Hora</label><input id="p-hora" type="time" value="21:00" required></div>
+        <div class="campo"><label for="p-cancha">Cancha</label><input id="p-cancha" maxlength="60" placeholder="Ej: El Potrero, cancha 3"></div>
+        <div class="campo"><label for="p-precio">Precio c/u</label><input id="p-precio" type="number" min="0" step="100" required placeholder="8500"></div>
+        <div class="campo"><label for="p-cupo">Jugadores</label><input id="p-cupo" type="number" min="2" max="40" value="18" required></div>
+        <div class="campo"><label for="p-resultado">Resultado</label><input id="p-resultado" maxlength="40" placeholder="Ej: Blancos 7 - Negros 5"></div>
+        <button class="btn primario" type="submit" id="btn-partido">Crear partido</button>
+        <button class="btn peligro" type="button" id="btn-borrar-partido" hidden>Borrar partido</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="envoltura pie">
+  <span>Los datos se actualizan solos cada pocos segundos.</span>
+  <div class="pin-form" id="zona-org"></div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<canvas class="confeti" id="confeti" hidden></canvas>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  const pesos = (n) => "$" + Math.round(n || 0).toLocaleString("es-AR");
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+    del(k) { try { localStorage.removeItem(k); } catch {} },
+  };
+  const COLOR = { mp: "var(--mp)", banco: "var(--banco)", efectivo: "var(--efectivo)" };
+  const NOMBRE_METODO = { mp: "Mercado Pago", banco: "Banco", efectivo: "Efectivo" };
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let datos = { partidos: [], pinConfigurado: false };
+  let firma = "";
+  let selId = null;
+  let filtro = "todos";
+  let videoActual = null;
+  let esOrganizador = false;
+  let ultimoOk = 0;
+  let completoAntes = null;
+
+  // ---------- API ----------
+  async function api(accion, extra = {}) {
+    const r = await fetch("/api/data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-pin": store.get("pin") || "" },
+      body: JSON.stringify({ accion, ...extra }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || "No se pudo guardar. Revisá tu conexión.");
+    return j;
+  }
+
+  async function cargar() {
+    try {
+      const r = await fetch("/api/data", { cache: "no-store" });
+      if (!r.ok) throw new Error();
+      const j = await r.json();
+      ultimoOk = Date.now();
+      $("#vivo").classList.remove("caido");
+      const nueva = JSON.stringify(j);
+      if (nueva !== firma) {
+        firma = nueva;
+        datos = j;
+        if (!datos.pinConfigurado) esOrganizador = true;
+        render();
+      }
+    } catch {
+      $("#vivo").classList.add("caido");
+      $("#vivo-txt").textContent = "Sin conexión";
+    }
+  }
+
+  setInterval(() => {
+    if (ultimoOk) {
+      const s = Math.round((Date.now() - ultimoOk) / 1000);
+      if (!$("#vivo").classList.contains("caido")) $("#vivo-txt").textContent = s < 5 ? "En vivo" : `Hace ${s} s`;
+    }
+  }, 1000);
+  setInterval(() => { if (!document.hidden) cargar(); }, 6000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) cargar(); });
+
+  // ---------- helpers ----------
+  const partido = () => datos.partidos.find((p) => p.id === selId) || null;
+  function stats(p) {
+    const js = p.jugadores;
+    const pag = js.filter((j) => j.estado === "pagado");
+    const recaudado = pag.reduce((s, j) => s + (j.monto || 0), 0);
+    const objetivo = p.precio * p.cupo;
+    return { js, pag, deben: js.filter((j) => j.estado === "debe"), recaudado, objetivo, falta: Math.max(0, objetivo - recaudado), libres: Math.max(0, p.cupo - js.length) };
+  }
+  const fechaLarga = (p) => new Date(p.fecha + "T12:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+  const hora = (iso) => iso ? new Date(iso).toLocaleString("es-AR", { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
+  const esFuturo = (p) => new Date(p.fecha + "T" + p.hora) > new Date(Date.now() - 3 * 3600e3);
+
+  function toast(msg, error = false) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.toggle("error", error);
+    t.classList.add("ver");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove("ver"), 2800);
+  }
+
+  function animarNumero(el, hasta, formato) {
+    const desde = Number(el.dataset.v || 0);
+    el.dataset.v = hasta;
+    if (reduceMotion || desde === hasta) { el.textContent = formato(hasta); return; }
+    const t0 = performance.now(), dur = 900;
+    const paso = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = formato(desde + (hasta - desde) * e);
+      if (k < 1) requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+  }
+
+  async function copiar(texto, ok) {
+    try { await navigator.clipboard.writeText(texto); toast(ok); }
+    catch {
+      const ta = document.createElement("textarea");
+      ta.value = texto; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); toast(ok); } catch { toast("No pude copiar. Copialo a mano.", true); }
+      ta.remove();
+    }
+  }
+
+  // ---------- render ----------
+  function render() {
+    // selección: hash > la seleccionada > la próxima > la más reciente
+    const h = location.hash.match(/^#p-([\w]+)/);
+    if (h && datos.partidos.some((p) => p.id === h[1])) selId = h[1];
+    if (!datos.partidos.some((p) => p.id === selId)) {
+      const futuros = datos.partidos.filter(esFuturo);
+      selId = (futuros[futuros.length - 1] || datos.partidos[0] || {}).id || null;
+    }
+    renderSelector();
+    renderTablero();
+    renderCancha();
+    renderDona();
+    renderCurva();
+    renderTabla();
+    renderVideos();
+    renderRanking();
+    renderHistorial();
+    renderOrganizador();
+  }
+
+  function renderSelector() {
+    const s = $("#sel-partido");
+    s.innerHTML = datos.partidos.length
+      ? datos.partidos.map((p) => `<option value="${esc(p.id)}" ${p.id === selId ? "selected" : ""}>${esc(new Date(p.fecha + "T12:00").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" }))} · ${esc(p.hora)}</option>`).join("")
+      : `<option>Sin partidos</option>`;
+    s.disabled = !datos.partidos.length;
+  }
+
+  function renderTablero() {
+    const p = partido();
+    if (!p) {
+      $("#t-eyebrow").textContent = "Todavía no hay partidos";
+      $("#t-dia").textContent = "Armá la primera fecha";
+      $("#t-meta").innerHTML = `<span>El organizador crea el partido abajo, en <b>Modo organizador</b>.</span>`;
+      $("#t-celdas").innerHTML = "";
+      ["#t-recaudado", "#t-objetivo", "#t-falta"].forEach((s) => ($(s).textContent = "$0"));
+      $("#t-pagaron").textContent = "0"; $("#t-cupo").textContent = "18";
+      $("#t-destacados").innerHTML = "";
+      return;
+    }
+    const st = stats(p);
+    $("#t-eyebrow").textContent = esFuturo(p) ? "Próximo partido" : "Partido jugado";
+    $("#t-dia").textContent = fechaLarga(p);
+    $("#t-meta").innerHTML = [
+      `<span><b>${esc(p.hora)}</b> hs</span>`,
+      p.cancha ? `<span>${esc(p.cancha)}</span>` : "",
+      `<span><b>${pesos(p.precio)}</b> por cabeza</span>`,
+      p.resultado ? `<span>Resultado: <b>${esc(p.resultado)}</b></span>` : "",
+    ].join("");
+    animarNumero($("#t-pagaron"), st.pag.length, (v) => Math.round(v));
+    $("#t-cupo").textContent = p.cupo;
+    $("#t-led-sub").textContent = st.pag.length === p.cupo ? "Pagaron todos. Caja cerrada" : `Pagaron · ${st.deben.length} deben · ${st.libres} lugares libres`;
+    animarNumero($("#t-recaudado"), st.recaudado, pesos);
+    animarNumero($("#t-objetivo"), st.objetivo, pesos);
+    animarNumero($("#t-falta"), st.falta, pesos);
+
+    const cel = $("#t-celdas");
+    cel.style.setProperty("--n", p.cupo);
+    const orden = [...st.pag.sort((a, b) => (a.pagadoEn || "").localeCompare(b.pagadoEn || "")), ...st.deben];
+    cel.innerHTML = Array.from({ length: p.cupo }, (_, i) => {
+      const j = orden[i];
+      return `<div class="celda ${j ? (j.estado === "pagado" ? j.metodo : "debe") : ""}" title="${j ? esc(j.nombre) : "Libre"}"></div>`;
+    }).join("");
+
+    const dest = [];
+    const primero = st.pag.slice().sort((a, b) => a.pagadoEn.localeCompare(b.pagadoEn))[0];
+    if (primero) dest.push(`<span class="chip-dest">Primero en pagar: <b>${esc(primero.nombre)}</b></span>`);
+    const conteo = { mp: 0, banco: 0, efectivo: 0 };
+    st.pag.forEach((j) => conteo[j.metodo]++);
+    const top = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0];
+    if (top && top[1]) dest.push(`<span class="chip-dest">Más usado: <b>${NOMBRE_METODO[top[0]]}</b></span>`);
+    if (st.deben.length) dest.push(`<span class="chip-dest">Deben: <b>${esc(st.deben.map((j) => j.nombre).join(", "))}</b></span>`);
+    $("#t-destacados").innerHTML = dest.join("");
+
+    const completo = st.pag.length === p.cupo && p.cupo > 0;
+    if (completoAntes === false && completo) festejar();
+    completoAntes = completo;
+  }
+
+  // posiciones de una formación para n jugadores en media cancha
+  function formacion(n) {
+    if (n <= 1) return [[1]];
+    const resto = n - 1;
+    const lineas = resto <= 3 ? [resto] : resto <= 6 ? [Math.ceil(resto / 2), Math.floor(resto / 2)] : [Math.ceil(resto / 3), Math.ceil((resto - Math.ceil(resto / 3)) / 2), resto - Math.ceil(resto / 3) - Math.ceil((resto - Math.ceil(resto / 3)) / 2)];
+    return [1, ...lineas.filter(Boolean)];
+  }
+
+  function renderCancha() {
+    const p = partido();
+    const W = 720, H = 440, m = 20;
+    if (!p) { $("#cancha").innerHTML = `<p class="vacio">Cuando haya un partido, acá aparecen los ${18} lugares.</p>`; return; }
+    const st = stats(p);
+    const nA = Math.ceil(p.cupo / 2), nB = p.cupo - nA;
+    const pos = (n, lado) => {
+      const lines = formacion(n), out = [];
+      const ancho = (W / 2 - m) - 30;
+      lines.forEach((cant, li) => {
+        const x = m + 26 + (lines.length === 1 ? 0 : (li / (lines.length - 1)) * (ancho - 40));
+        for (let k = 0; k < cant; k++) {
+          const y = m + ((k + 1) / (cant + 1)) * (H - 2 * m);
+          out.push([lado === "A" ? x : W - x, y]);
+        }
+      });
+      return out;
+    };
+    const slots = [];
+    const pa = pos(nA, "A"), pb = pos(nB, "B");
+    for (let i = 0; i < p.cupo; i++) slots.push(i % 2 === 0 ? pa[i / 2] : pb[(i - 1) / 2]);
+    const camiseta = "M-12,-13 L-5,-16 Q0,-11.5 5,-16 L12,-13 L18,-5 L12,-1 L11,14 L-11,14 L-12,-1 L-18,-5 Z";
+    const ls = 'stroke="rgba(238,245,239,.55)" stroke-width="2" fill="none"';
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cancha con ${st.js.length} de ${p.cupo} jugadores anotados">
+      <defs><pattern id="franjas" width="80" height="${H}" patternUnits="userSpaceOnUse"><rect width="40" height="${H}" fill="#0f3325"/><rect x="40" width="40" height="${H}" fill="#123b2b"/></pattern>
+      <radialGradient id="luz" cx="50%" cy="0%" r="90%"><stop offset="0" stop-color="#fff6c8" stop-opacity=".16"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></radialGradient></defs>
+      <rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="url(#franjas)"/>
+      <rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="url(#luz)"/>
+      <rect x="${m}" y="${m}" width="${W - 2 * m}" height="${H - 2 * m}" ${ls}/>
+      <line x1="${W / 2}" y1="${m}" x2="${W / 2}" y2="${H - m}" ${ls}/>
+      <circle cx="${W / 2}" cy="${H / 2}" r="52" ${ls}/><circle cx="${W / 2}" cy="${H / 2}" r="3" fill="rgba(238,245,239,.7)"/>
+      <rect x="${m}" y="${H / 2 - 90}" width="90" height="180" ${ls}/><rect x="${W - m - 90}" y="${H / 2 - 90}" width="90" height="180" ${ls}/>
+      <rect x="${m}" y="${H / 2 - 40}" width="34" height="80" ${ls}/><rect x="${W - m - 34}" y="${H / 2 - 40}" width="34" height="80" ${ls}/>
+      <rect x="${m - 8}" y="${H / 2 - 24}" width="8" height="48" fill="rgba(238,245,239,.25)"/><rect x="${W - m}" y="${H / 2 - 24}" width="8" height="48" fill="rgba(238,245,239,.25)"/>`;
+    const orden = st.js;
+    slots.forEach(([x, y], i) => {
+      const j = orden[i];
+      if (!j) {
+        svg += `<g class="slot" transform="translate(${x},${y})"><circle r="15" fill="none" stroke="rgba(238,245,239,.35)" stroke-width="1.6" stroke-dasharray="4 4"/><text y="5" text-anchor="middle" font-size="16" fill="rgba(238,245,239,.45)">+</text></g>`;
+        return;
+      }
+      const pago = j.estado === "pagado";
+      const color = pago ? { mp: "#5cc8ff", banco: "#b9a0ff", efectivo: "#7fe08a" }[j.metodo] : "#0c2219";
+      const trazo = pago ? "rgba(0,0,0,.35)" : "#ff5d55";
+      const nombre = j.nombre.length > 11 ? j.nombre.slice(0, 10) + "…" : j.nombre;
+      svg += `<g class="slot" transform="translate(${x},${y})"><title>${esc(j.nombre)}: ${pago ? "pagó con " + NOMBRE_METODO[j.metodo] : "debe"}</title>
+        <path class="camiseta" d="${camiseta}" fill="${color}" stroke="${trazo}" stroke-width="${pago ? 1.2 : 2}" ${pago ? "" : 'stroke-dasharray="3 2"'}/>
+        <text y="5" text-anchor="middle" font-size="13" font-weight="700" fill="${pago ? "#06140d" : "#ff5d55"}">${i + 1}</text>
+        <rect x="-40" y="19" width="80" height="18" rx="9" fill="rgba(3,12,8,.75)"/>
+        <text y="32" text-anchor="middle" font-size="12" font-weight="600" fill="#eef5ef">${esc(nombre)}</text></g>`;
+    });
+    svg += `</svg>`;
+    $("#cancha").innerHTML = svg;
+    $("#cancha-nota").textContent = `${st.js.length} anotados · ${st.libres} libres`;
+  }
+
+  function renderDona() {
+    const p = partido();
+    if (!p) { $("#dona").innerHTML = `<p class="vacio" style="grid-column:1/-1">Sin datos todavía.</p>`; return; }
+    const st = stats(p);
+    const seg = [
+      { k: "mp", n: st.pag.filter((j) => j.metodo === "mp"), c: "#5cc8ff", t: "Mercado Pago" },
+      { k: "banco", n: st.pag.filter((j) => j.metodo === "banco"), c: "#b9a0ff", t: "Banco" },
+      { k: "efectivo", n: st.pag.filter((j) => j.metodo === "efectivo"), c: "#7fe08a", t: "Efectivo" },
+      { k: "debe", n: st.deben, c: "#ff5d55", t: "Deben" },
+    ];
+    const total = p.cupo, R = 54, C = 2 * Math.PI * R;
+    let off = 0, arcos = "";
+    seg.forEach((s) => {
+      const len = (s.n.length / total) * C;
+      if (len > 0) arcos += `<circle r="${R}" cx="75" cy="75" fill="none" stroke="${s.c}" stroke-width="18" stroke-dasharray="${Math.max(0, len - 2)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"/>`;
+      off += len;
+    });
+    const pct = Math.round((st.pag.length / total) * 100);
+    $("#dona").innerHTML = `<svg viewBox="0 0 150 150" role="img" aria-label="${pct}% pagó">
+        <circle r="${R}" cx="75" cy="75" fill="none" stroke="#0a1d15" stroke-width="18"/>${arcos}
+        <text x="75" y="80" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="34" fill="#eef5ef">${pct}%</text>
+        <text x="75" y="98" text-anchor="middle" font-family="Barlow Semi Condensed, sans-serif" font-weight="600" font-size="10" letter-spacing="1.5" fill="#6f8f7e">PAGÓ</text></svg>
+      <ul>${seg.map((s) => `<li><i style="background:${s.c}"></i><span>${s.t}<small>${s.k === "debe" ? pesos(s.n.length * p.precio) + " pendiente" : pesos(s.n.reduce((a, j) => a + j.monto, 0))}</small></span><b>${s.n.length}</b></li>`).join("")}
+      <li><i style="background:#0d2219;border:1px solid #1f4a38"></i><span>Libres<small>sin anotar</small></span><b>${st.libres}</b></li></ul>`;
+  }
+
+  function renderCurva() {
+    const p = partido();
+    const cont = $("#curva");
+    if (!p) { cont.innerHTML = `<p class="vacio">Sin datos todavía.</p>`; return; }
+    const st = stats(p);
+    const pagos = st.pag.filter((j) => j.pagadoEn).sort((a, b) => a.pagadoEn.localeCompare(b.pagadoEn));
+    if (!pagos.length) { cont.innerHTML = `<p class="vacio">Cuando entre el primer pago, acá se dibuja cómo va llenándose la caja.</p>`; return; }
+    const W = 420, H = 210, L = 58, R = 14, T = 16, B = 30;
+    const t0 = new Date(pagos[0].pagadoEn).getTime();
+    const t1 = Math.max(Date.now(), new Date(pagos[pagos.length - 1].pagadoEn).getTime() + 60e3);
+    const ymax = Math.max(st.objetivo, st.recaudado) || 1;
+    const X = (t) => L + ((t - t0) / (t1 - t0 || 1)) * (W - L - R);
+    const Y = (v) => T + (1 - v / ymax) * (H - T - B);
+    let acc = 0, d = `M${X(t0)},${Y(0)}`;
+    pagos.forEach((j) => { const x = X(new Date(j.pagadoEn).getTime()); d += ` L${x},${Y(acc)}`; acc += j.monto; d += ` L${x},${Y(acc)}`; });
+    d += ` L${X(t1)},${Y(acc)}`;
+    const area = d + ` L${X(t1)},${Y(0)} Z`;
+    const ticks = [0, ymax / 2, ymax];
+    const fmtT = (t) => new Date(t).toLocaleString("es-AR", { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+    cont.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Recaudado acumulado: ${pesos(acc)} de ${pesos(st.objetivo)}">
+      <defs><linearGradient id="gc" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd447" stop-opacity=".35"/><stop offset="1" stop-color="#ffd447" stop-opacity="0"/></linearGradient></defs>
+      ${ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#1f4a38" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="#6f8f7e" font-family="Barlow Semi Condensed, sans-serif">${pesos(v)}</text>`).join("")}
+      ${st.objetivo ? `<line x1="${L}" x2="${W - R}" y1="${Y(st.objetivo)}" y2="${Y(st.objetivo)}" stroke="#7fe08a" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W - R}" y="${Y(st.objetivo) - 6}" text-anchor="end" font-size="11" font-weight="700" fill="#7fe08a" font-family="Barlow Semi Condensed, sans-serif">OBJETIVO</text>` : ""}
+      <path d="${area}" fill="url(#gc)"/>
+      <path d="${d}" fill="none" stroke="#ffd447" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="${X(t1)}" cy="${Y(acc)}" r="5" fill="#ffd447" stroke="#030c08" stroke-width="2"/>
+      <text x="${L}" y="${H - 8}" font-size="11" fill="#6f8f7e" font-family="Barlow Semi Condensed, sans-serif">${esc(fmtT(t0))}</text>
+      <text x="${W - R}" y="${H - 8}" text-anchor="end" font-size="11" fill="#6f8f7e" font-family="Barlow Semi Condensed, sans-serif">Ahora</text></svg>`;
+  }
+
+  function renderTabla() {
+    const p = partido();
+    const tb = $("#tabla");
+    const yo = norm(store.get("miNombre"));
+    if (!p) { tb.innerHTML = `<tr><td colspan="7" class="vacio">No hay partido seleccionado.</td></tr>`; return; }
+    const st = stats(p);
+    let filas = st.js.map((j, i) => ({ j, i }));
+    if (filtro !== "todos") filas = filas.filter(({ j }) => j.estado === filtro);
+    // datalist con nombres de fechas anteriores
+    const conocidos = [...new Set(datos.partidos.flatMap((x) => x.jugadores.map((j) => j.nombre)))];
+    $("#nombres-conocidos").innerHTML = conocidos.map((n) => `<option value="${esc(n)}">`).join("");
+    if (!filas.length) {
+      tb.innerHTML = `<tr><td colspan="7" class="vacio">${st.js.length ? "Nadie en este filtro." : "Todavía no se anotó nadie. Usá el formulario para ser el primero."}</td></tr>`;
+      return;
+    }
+    tb.innerHTML = filas.map(({ j, i }) => {
+      const pago = j.estado === "pagado";
+      return `<tr class="${norm(j.nombre) === yo ? "yo" : ""}" data-id="${esc(j.id)}">
+        <td class="n">${i + 1}</td>
+        <td class="nombre">${esc(j.nombre)}${norm(j.nombre) === yo ? "<small>Vos</small>" : ""}</td>
+        <td><span class="pill ${pago ? "pagado" : "debe"}">${pago ? "Pagó" : "Debe"}</span></td>
+        <td>${pago ? `<span class="metodo"><i style="background:${COLOR[j.metodo]}"></i>${NOMBRE_METODO[j.metodo]}</span>` : "—"}</td>
+        <td class="num">${pago ? pesos(j.monto) : pesos(p.precio)}</td>
+        <td class="num" style="color:var(--tiza-3);white-space:nowrap">${pago ? esc(hora(j.pagadoEn)) : "—"}</td>
+        <td class="acc">${pago ? "" : `<span class="pagar-rapido" aria-label="Marcar que pagó"><button class="btn chico" data-pagar="mp" type="button">MP</button><button class="btn chico" data-pagar="banco" type="button">Banco</button><button class="btn chico" data-pagar="efectivo" type="button">Efvo</button></span>`}
+          <button class="btn chico" data-editar type="button">Editar</button>${esOrganizador ? `<button class="btn chico peligro" data-borrar type="button">Borrar</button>` : ""}</td></tr>`;
+    }).join("");
+  }
+
+  function renderVideos() {
+    const p = partido();
+    const vids = p ? p.videos || [] : [];
+    if (!vids.some((v) => v.yt === videoActual)) videoActual = vids.length ? vids[vids.length - 1].yt : null;
+    const pant = $("#pantalla");
+    const actual = pant.dataset.yt || "";
+    if ((videoActual || "") !== actual) {
+      pant.dataset.yt = videoActual || "";
+      pant.innerHTML = videoActual
+        ? `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoActual)}?rel=0" title="Video del partido" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>`
+        : `<div class="sin-video"><div><b>Sin video</b>Si alguien grabó el partido, que lo suba a YouTube y pegue el link acá.</div></div>`;
+    }
+    $("#lista-videos").innerHTML = vids.slice().reverse().map((v) => `<div style="display:flex;gap:6px;align-items:center">
+      <button class="v" type="button" data-yt="${esc(v.yt)}" aria-current="${v.yt === videoActual}"><img src="https://i.ytimg.com/vi/${encodeURIComponent(v.yt)}/mqdefault.jpg" alt="" loading="lazy"><span>${esc(v.titulo)}</span></button>
+      ${esOrganizador ? `<button class="btn chico peligro" type="button" data-borrar-video="${esc(v.yt)}" aria-label="Borrar video">×</button>` : ""}</div>`).join("");
+    $("#form-video").querySelector("button").disabled = !p;
+  }
+
+  function renderRanking() {
+    const tabla = new Map();
+    datos.partidos.forEach((p) => p.jugadores.forEach((j) => {
+      const k = norm(j.nombre);
+      const r = tabla.get(k) || { nombre: j.nombre, jugo: 0, pago: 0, deuda: 0 };
+      r.jugo++;
+      if (j.estado === "pagado") r.pago++; else r.deuda += p.precio;
+      tabla.set(k, r);
+    }));
+    const filas = [...tabla.values()].sort((a, b) => b.deuda - a.deuda || b.jugo - a.jugo || a.nombre.localeCompare(b.nombre));
+    $("#ranking").innerHTML = filas.length
+      ? filas.slice(0, 40).map((r) => `<tr><td class="nombre">${esc(r.nombre)}</td><td class="num">${r.jugo}</td><td class="num">${r.pago}</td><td class="num ${r.deuda ? "deuda" : "cero"}">${r.deuda ? pesos(r.deuda) : "Al día"}</td></tr>`).join("")
+      : `<tr><td colspan="4" class="vacio">Se arma sola con las fechas que se vayan jugando.</td></tr>`;
+  }
+
+  function renderHistorial() {
+    $("#historial").innerHTML = datos.partidos.length
+      ? datos.partidos.map((p) => {
+          const st = stats(p), pct = Math.round((st.pag.length / p.cupo) * 100);
+          const f = new Date(p.fecha + "T12:00");
+          return `<button class="fecha-card" type="button" data-sel="${esc(p.id)}" aria-current="${p.id === selId}">
+            <span class="dia">${f.getDate()}<small>${esc(f.toLocaleDateString("es-AR", { month: "short" }))}</small></span>
+            <span class="info">${esc(f.toLocaleDateString("es-AR", { weekday: "long" }))} · ${esc(p.hora)}<br><small>${st.pag.length}/${p.cupo} pagaron · ${pesos(st.recaudado)}${p.videos?.length ? " · con video" : ""}</small><span class="barrita"><i style="width:${pct}%"></i></span></span>
+            <span class="pct">${pct}%</span></button>`;
+        }).join("")
+      : `<p class="vacio">Acá van a quedar todas las fechas.</p>`;
+  }
+
+  let modoOrg = "nuevo";
+  function renderOrganizador() {
+    $("#organizador").hidden = !esOrganizador;
+    const zona = $("#zona-org");
+    if (!datos.pinConfigurado) {
+      zona.innerHTML = `<span>Sin PIN de organizador: cualquiera puede crear y borrar. Configurá <code>ADMIN_PIN</code> en Vercel.</span>`;
+    } else if (esOrganizador) {
+      zona.innerHTML = `<span>Modo organizador activo</span><button class="btn chico" type="button" id="btn-salir-org">Salir</button>`;
+    } else {
+      zona.innerHTML = `<form class="pin-form" id="form-pin"><label for="pin">Organizador</label><input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off"><button class="btn chico" type="submit">Entrar</button></form>`;
+    }
+    const p = partido();
+    $("#btn-modo-editar").disabled = !p;
+    if (modoOrg === "editar" && !p) modoOrg = "nuevo";
+    llenarFormPartido();
+  }
+
+  function llenarFormPartido() {
+    const p = partido();
+    const editar = modoOrg === "editar" && p;
+    $("#btn-modo-nuevo").setAttribute("aria-pressed", !editar);
+    $("#btn-modo-editar").setAttribute("aria-pressed", !!editar);
+    $("#org-tit").textContent = editar ? "Editar partido" : "Nuevo partido";
+    $("#btn-partido").textContent = editar ? "Guardar cambios" : "Crear partido";
+    $("#btn-borrar-partido").hidden = !editar;
+    const f = $("#form-partido");
+    if (f.contains(document.activeElement)) return; // no pisar lo que está escribiendo
+    const base = editar ? p : datos.partidos[0];
+    const proxima = new Date(); proxima.setDate(proxima.getDate() + 7);
+    $("#p-fecha").value = editar ? p.fecha : (base ? siguienteSemana(base.fecha) : proxima.toISOString().slice(0, 10));
+    $("#p-hora").value = base?.hora || "21:00";
+    $("#p-cancha").value = base?.cancha || "";
+    $("#p-precio").value = base?.precio || "";
+    $("#p-cupo").value = base?.cupo || 18;
+    $("#p-resultado").value = editar ? p.resultado || "" : "";
+  }
+  function siguienteSemana(fecha) {
+    const d = new Date(fecha + "T12:00");
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    do d.setDate(d.getDate() + 7); while (d < hoy);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // ---------- eventos ----------
+  $("#sel-partido").addEventListener("change", (e) => { selId = e.target.value; location.hash = "p-" + selId; render(); });
+  window.addEventListener("hashchange", render);
+
+  document.addEventListener("click", async (e) => {
+    const t = e.target.closest("button");
+    if (!t) return;
+    if (t.dataset.sel) { selId = t.dataset.sel; location.hash = "p-" + selId; render(); scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" }); return; }
+    if (t.dataset.f) {
+      filtro = t.dataset.f;
+      document.querySelectorAll(".filtros [data-f]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.f === filtro));
+      renderTabla(); return;
+    }
+    if (t.dataset.yt) { videoActual = t.dataset.yt; renderVideos(); return; }
+    const fila = t.closest("tr[data-id]");
+    const p = partido();
+    if (fila && p) {
+      const j = p.jugadores.find((x) => x.id === fila.dataset.id);
+      if (!j) return;
+      if (t.dataset.pagar) return guardarJugador({ id: j.id, nombre: j.nombre, estado: "pagado", metodo: t.dataset.pagar, monto: p.precio }, `${j.nombre} pagó`);
+      if ("editar" in t.dataset) return editarJugador(j);
+      if ("borrar" in t.dataset) {
+        if (t.dataset.confirmar !== "1") { t.dataset.confirmar = "1"; t.textContent = "¿Seguro?"; setTimeout(() => { t.dataset.confirmar = ""; t.textContent = "Borrar"; }, 3000); return; }
+        try { await api("borrarJugador", { partidoId: p.id, id: j.id }); toast(`Saqué a ${j.nombre}`); cargar(); } catch (err) { toast(err.message, true); }
+        return;
+      }
+    }
+    if (t.dataset.borrarVideo && p) {
+      try { await api("borrarVideo", { partidoId: p.id, yt: t.dataset.borrarVideo }); toast("Video borrado"); cargar(); } catch (err) { toast(err.message, true); }
+      return;
+    }
+    if (t.id === "btn-copiar-link") {
+      const pp = partido();
+      const url = location.origin + location.pathname + (pp ? "#p-" + pp.id : "");
+      return copiar(pp ? `⚽ Fútbol ${fechaLarga(pp)} ${pp.hora} hs. Anotate y avisá si pagaste acá: ${url}` : url, "Link copiado. Pegalo en el grupo.");
+    }
+    if (t.id === "btn-copiar-resumen") {
+      const pp = partido(); if (!pp) return;
+      const st = stats(pp);
+      const por = (m) => st.pag.filter((j) => j.metodo === m).map((j) => j.nombre);
+      const txt = [
+        `⚽ *${fechaLarga(pp)} · ${pp.hora} hs*`,
+        `✅ Pagaron ${st.pag.length}/${pp.cupo} · ${pesos(st.recaudado)} de ${pesos(st.objetivo)}`,
+        por("mp").length ? `Mercado Pago: ${por("mp").join(", ")}` : "",
+        por("banco").length ? `Banco: ${por("banco").join(", ")}` : "",
+        por("efectivo").length ? `Efectivo: ${por("efectivo").join(", ")}` : "",
+        st.deben.length ? `❌ Deben: ${st.deben.map((j) => j.nombre).join(", ")}` : "",
+        st.libres ? `Quedan ${st.libres} lugares` : "",
+        location.origin + location.pathname + "#p-" + pp.id,
+      ].filter(Boolean).join("\n");
+      return copiar(txt, "Resumen copiado. Pegalo en el grupo.");
+    }
+    if (t.id === "btn-modo-nuevo") { modoOrg = "nuevo"; document.activeElement.blur(); llenarFormPartido(); return; }
+    if (t.id === "btn-modo-editar") { modoOrg = "editar"; document.activeElement.blur(); llenarFormPartido(); return; }
+    if (t.id === "btn-borrar-partido" && p) {
+      if (t.dataset.confirmar !== "1") { t.dataset.confirmar = "1"; t.textContent = "Tocá de nuevo para borrar todo"; setTimeout(() => { t.dataset.confirmar = ""; t.textContent = "Borrar partido"; }, 4000); return; }
+      try { await api("borrarPartido", { id: p.id }); toast("Partido borrado"); selId = null; modoOrg = "nuevo"; history.replaceState(null, "", location.pathname); cargar(); } catch (err) { toast(err.message, true); }
+      return;
+    }
+    if (t.id === "btn-salir-org") { store.del("pin"); esOrganizador = false; render(); return; }
+    if (t.id === "btn-cancelar-edicion") { limpiarForm(); return; }
+  });
+
+  // formulario de jugador
+  const formJ = $("#form-jugador");
+  function actualizarCamposPago() {
+    const pago = formJ.estado.value === "pagado";
+    $("#campo-metodo").hidden = !pago;
+    $("#campo-monto").hidden = !pago;
+    $("#btn-guardar").textContent = $("#j-id").value ? "Guardar cambios" : pago ? "Avisar que pagué" : "Anotarme";
+  }
+  formJ.addEventListener("change", actualizarCamposPago);
+  function limpiarForm() {
+    $("#j-id").value = "";
+    $("#form-tit").textContent = "Anotate o avisá que pagaste";
+    $("#btn-cancelar-edicion").hidden = true;
+    $("#j-nombre").value = store.get("miNombre") || "";
+    $("#j-monto").value = "";
+    actualizarCamposPago();
+  }
+  function editarJugador(j) {
+    $("#j-id").value = j.id;
+    $("#j-nombre").value = j.nombre;
+    formJ.estado.value = j.estado;
+    if (j.metodo) formJ.metodo.value = j.metodo;
+    $("#j-monto").value = j.monto || "";
+    $("#form-tit").textContent = `Editando a ${j.nombre}`;
+    $("#btn-cancelar-edicion").hidden = false;
+    actualizarCamposPago();
+    $("#j-nombre").focus();
+  }
+  async function guardarJugador(j, msg) {
+    const p = partido();
+    if (!p) return toast("Primero el organizador tiene que crear el partido.", true);
+    try {
+      const r = await api("guardarJugador", { partidoId: p.id, jugador: j });
+      toast(msg || (r.actualizado ? `Listo, actualicé a ${r.jugador.nombre}` : `Listo, ${r.jugador.nombre} quedó anotado`));
+      await cargar();
+      return true;
+    } catch (err) { toast(err.message, true); return false; }
+  }
+  formJ.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const p = partido();
+    const nombre = $("#j-nombre").value.trim();
+    if (!nombre) return;
+    const editando = !!$("#j-id").value;
+    if (!editando) store.set("miNombre", nombre);
+    const ok = await guardarJugador({
+      id: $("#j-id").value || undefined,
+      nombre,
+      estado: formJ.estado.value,
+      metodo: formJ.metodo.value,
+      monto: Number($("#j-monto").value) || (p ? p.precio : 0),
+    });
+    if (ok) limpiarForm();
+  });
+
+  // video
+  $("#form-video").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const p = partido(); if (!p) return;
+    try {
+      const r = await api("agregarVideo", { partidoId: p.id, url: $("#v-url").value, titulo: $("#v-titulo").value });
+      videoActual = r.partido.videos[r.partido.videos.length - 1].yt;
+      e.target.reset(); toast("Video subido"); cargar();
+    } catch (err) { toast(err.message, true); }
+  });
+
+  // organizador
+  document.addEventListener("submit", async (e) => {
+    if (e.target.id !== "form-pin") return;
+    e.preventDefault();
+    store.set("pin", $("#pin").value.trim());
+    try { await api("verificarPin"); esOrganizador = true; toast("Modo organizador activado"); render(); }
+    catch { store.del("pin"); toast("PIN incorrecto", true); }
+  });
+  $("#form-partido").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const p = partido();
+    const editar = modoOrg === "editar" && p;
+    try {
+      const r = await api("guardarPartido", { partido: {
+        id: editar ? p.id : undefined,
+        fecha: $("#p-fecha").value, hora: $("#p-hora").value, cancha: $("#p-cancha").value,
+        precio: $("#p-precio").value, cupo: $("#p-cupo").value, resultado: $("#p-resultado").value,
+      } });
+      selId = r.partido.id; location.hash = "p-" + selId;
+      document.activeElement.blur();
+      toast(editar ? "Partido actualizado" : "Partido creado. Copiá el link y mandalo al grupo.");
+      modoOrg = "editar";
+      await cargar();
+    } catch (err) { toast(err.message, true); }
+  });
+
+  // festejo cuando pagan todos
+  function festejar() {
+    toast("¡Pagaron todos! Caja cerrada");
+    if (reduceMotion) return;
+    const c = $("#confeti"), ctx = c.getContext("2d");
+    c.hidden = false; c.width = innerWidth; c.height = innerHeight;
+    const cols = ["#ffd447", "#5cc8ff", "#b9a0ff", "#7fe08a", "#eef5ef"];
+    const ps = Array.from({ length: 160 }, () => ({ x: Math.random() * c.width, y: -20 - Math.random() * c.height * 0.5, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 4, r: Math.random() * 6.28, s: 4 + Math.random() * 6, c: cols[(Math.random() * cols.length) | 0] }));
+    const t0 = performance.now();
+    (function cuadro(t) {
+      ctx.clearRect(0, 0, c.width, c.height);
+      ps.forEach((p) => { p.x += p.vx; p.y += p.vy; p.r += 0.1; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+      if (t - t0 < 3500) requestAnimationFrame(cuadro); else { ctx.clearRect(0, 0, c.width, c.height); c.hidden = true; }
+    })(t0);
+  }
+
+  // arranque
+  if (store.get("pin")) api("verificarPin").then(() => { esOrganizador = true; render(); }).catch(() => store.del("pin"));
+  limpiarForm();
+  cargar();
+})();
+</script>
+</body>
+</html>
