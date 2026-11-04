@@ -259,6 +259,7 @@ td.acc .btn+.btn{margin-left:4px}
         </div>
         <div class="acciones-hero">
           <a class="btn primario" href="#planilla">Ya pagué</a>
+          <a class="btn" id="btn-wsp" href="#" target="_blank" rel="noopener" hidden>Mandar comprobante por WhatsApp</a>
           <button class="btn" id="btn-copiar-link" type="button">Copiar link</button>
           <button class="btn" id="btn-copiar-resumen" type="button">Copiar resumen</button>
         </div>
@@ -553,6 +554,9 @@ td.acc .btn+.btn{margin-left:4px}
 
   function renderTablero() {
     const p = partido();
+    const wsp = $("#btn-wsp");
+    wsp.hidden = !datos.bot;
+    if (datos.bot) wsp.href = "https://wa.me/" + encodeURIComponent(datos.bot) + "?text=" + encodeURIComponent("Hola! Te mando el comprobante del fútbol");
     if (!p) {
       $("#t-eyebrow").textContent = "Todavía no hay partidos";
       $("#t-dia").textContent = "Armá la primera fecha";

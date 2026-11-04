@@ -2,5 +2,11 @@
   "name": "caja-del-fulbito",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "node dev-server.js" }
+  "scripts": {
+    "dev": "node dev-server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
+    "@vercel/functions": "^3.0.0"
+  }
 }
