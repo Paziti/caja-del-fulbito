@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#06110b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Doto:wght@700;900&family=Permanent+Marker&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Teko:wght@500;600;700&family=Permanent+Marker&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white' stroke='%2306110b' stroke-width='1.5'/%3E%3Cpath d='M16 9.5l5 3.6-1.9 5.9h-6.2L11 13.1z' fill='%2306110b'/%3E%3C/svg%3E">
 <style>
 /* Concepto: partido de noche bajo los reflectores. Césped con franjas de corte, líneas de cal,
@@ -36,10 +36,10 @@
   --debe-suave:rgba(255,93,85,.14);
   --libre:rgba(238,245,239,.10);
   --radio:14px;
-  /* letra de afiche de partido para títulos, tablero de puntos para las cifras,
+  /* letra de afiche de partido para títulos, tablero de TV para las cifras,
      fibrón de trapo de hinchada para los gritos, condensada de zócalo de TV para leer */
   --display:"Anton",Impact,"Arial Narrow",sans-serif;
-  --marcador:"Doto","Anton",monospace;
+  --marcador:"Teko","Anton",sans-serif;
   --mano:"Permanent Marker","Comic Sans MS",cursive;
   --texto:"Barlow Semi Condensed",system-ui,sans-serif;
   --sy:0;
@@ -146,7 +146,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 @keyframes sombra{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.45);opacity:.35}}
 @keyframes girar{to{transform:rotate(360deg)}}
 .pelota-pista{position:absolute;top:8px;right:8px;font:400 16px/1.2 var(--mano);transform:rotate(4deg);color:var(--tiza-3);text-align:right;transition:opacity .4s}
-.pelota-pista b{display:block;color:var(--accent);font:900 34px/1 var(--marcador);margin:4px 0}
+.pelota-pista b{display:block;color:var(--accent);font:600 44px/1 var(--marcador);margin:2px 0}
 
 /* ---------- botones ---------- */
 .btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--borde-2);background:rgba(238,245,239,.05);font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s,transform .2s cubic-bezier(.3,1.5,.5,1)}
@@ -169,8 +169,8 @@ h2{font-size:clamp(28px,4vw,40px)}
 .tablero::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1.4px) 0 0/5px 5px}
 .kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:12px;position:relative}
 .kpi{padding:16px 18px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid var(--borde);min-width:0}
-.kpi strong{display:block;font:900 clamp(28px,3.6vw,44px)/1 var(--marcador);margin-top:10px;letter-spacing:.01em;white-space:nowrap}
-.kpi.principal strong{font-size:clamp(56px,8vw,96px);color:var(--accent);text-shadow:0 0 28px rgba(255,212,71,.35)}
+.kpi strong{display:block;font:600 clamp(36px,4.6vw,56px)/1 var(--marcador);margin-top:10px;letter-spacing:.01em;white-space:nowrap}
+.kpi.principal strong{font-size:clamp(76px,10vw,124px);color:var(--accent);text-shadow:0 0 28px rgba(255,212,71,.35)}
 .kpi.principal small{font-size:.42em;color:var(--tiza-3);margin-left:4px}
 .kpi.principal p{margin:8px 0 0;color:var(--tiza-2);font-size:13px}
 .kpi.ok strong{color:var(--efectivo)}
@@ -241,7 +241,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 .dona-graf.dibujar svg{animation:dona 1.2s cubic-bezier(.3,.9,.3,1) both}
 @keyframes dona{from{transform:rotate(-270deg) scale(.5);opacity:0}to{transform:rotate(-90deg) scale(1);opacity:1}}
 .dona-centro{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-.dona-centro strong{font:900 30px/1 var(--marcador)}
+.dona-centro strong{font:600 40px/1 var(--marcador)}
 .dona-centro span{font-size:11px;color:var(--tiza-3);text-transform:uppercase;letter-spacing:.12em}
 .dona ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .dona li{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;font-size:14px}
@@ -334,7 +334,7 @@ td.cero{color:var(--efectivo)}
 .fecha-card .info small{color:var(--tiza-3);font-weight:400}
 .barrita{display:block;height:4px;border-radius:2px;background:var(--libre);margin-top:8px;overflow:hidden}
 .barrita i{display:block;height:100%;background:var(--accent);border-radius:inherit}
-.fecha-card .pct{font:900 20px var(--marcador)}
+.fecha-card .pct{font:600 28px var(--marcador)}
 
 /* ---------- organizador ---------- */
 #organizador .envoltura{display:grid;gap:16px}
