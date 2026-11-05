@@ -4,7 +4,7 @@
 import { randomInt } from "node:crypto";
 import {
   inicioPartido, MIN_ANTES_EQUIPOS, leerJugadores,
-  redis, K_PARTIDOS, kJug, almacenamiento, txt, limpiarPartido, leerPartido, leerTodo, guardarJugador, cargarLista,
+  redis, K_PARTIDOS, kJug, almacenamiento, txt, limpiarPartido, leerPartido, leerTodo, guardarJugador, cargarLista, subirSuplente,
 } from "../lib/store.js";
 
 const PIN = (process.env.ADMIN_PIN || "").trim();
@@ -102,6 +102,14 @@ export default async function handler(req, res) {
           .slice(0, 8);
         await redis([["HSET", K_PARTIDOS, p.id, JSON.stringify(p)]]);
         return res.status(200).json({ ok: true, partido: p });
+      }
+
+      case "subirSuplente": {
+        exigePin();
+        const p = await leerPartido(body.partidoId);
+        if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
+        const r = await subirSuplente(p, body.nombre, body.saleId ? txt(body.saleId, 20) : null);
+        return res.status(200).json({ ok: true, ...r });
       }
 
       case "borrarJugador": {
