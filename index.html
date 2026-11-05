@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#06110b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitcount+Prop+Single:wght@500;600;700&family=Permanent+Marker&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bitcount+Prop+Single:wght@500;600;700&family=Permanent+Marker&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white' stroke='%2306110b' stroke-width='1.5'/%3E%3Cpath d='M16 9.5l5 3.6-1.9 5.9h-6.2L11 13.1z' fill='%2306110b'/%3E%3C/svg%3E">
 <style>
 /* SF Collegiate (ShyFonts, freeware): va el paquete completo con su licencia en fonts/sf-collegiate */
@@ -41,6 +41,8 @@
   /* letra de camiseta universitaria para títulos, tablero de leds para las cifras,
      fibrón de trapo de hinchada para los gritos, condensada de zócalo de TV para leer */
   --display:"SF Collegiate Solid","Anton",Impact,sans-serif;
+  /* SF Collegiate dibuja el 1 como una I: los números de títulos van en Anton */
+  --num-tit:"Anton",Impact,sans-serif;
   --marcador:"Bitcount Prop Single","Anton",monospace;
   --mano:"Permanent Marker","Comic Sans MS",cursive;
   --texto:"Barlow Semi Condensed",system-ui,sans-serif;
@@ -67,8 +69,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .estadio .cal::after{content:"";position:absolute;left:50%;top:-200vh;bottom:-200vh;width:3px;background:var(--tiza);translate:-50% 0}
 .estadio .luz{position:absolute;top:-30vh;width:70vw;height:140vh;opacity:.55;mix-blend-mode:screen;filter:blur(6px);
   background:conic-gradient(from 180deg at 50% 0,transparent 160deg,rgba(255,244,200,.22) 175deg,rgba(255,250,225,.30) 180deg,rgba(255,244,200,.22) 185deg,transparent 200deg)}
-.estadio .luz.izq{left:-22vw;rotate:-28deg;transform-origin:50% 0;animation:barrer 11s ease-in-out infinite alternate}
-.estadio .luz.der{right:-22vw;rotate:28deg;transform-origin:50% 0;animation:barrer 13s ease-in-out infinite alternate-reverse}
+.estadio .luz.izq{left:-22vw;rotate:-28deg;transform-origin:50% 0;animation:encender 1.6s linear both,barrer 11s ease-in-out 1.6s infinite alternate}
+.estadio .luz.der{right:-22vw;rotate:28deg;transform-origin:50% 0;animation:encender 1.6s linear .3s both,barrer 13s ease-in-out 1.9s infinite alternate-reverse}
+/* al abrir la página los reflectores se prenden con un parpadeo */
+@keyframes encender{0%{opacity:0}8%{opacity:.5}11%{opacity:.04}22%{opacity:.55}26%{opacity:.12}42%,100%{opacity:.55}}
 @keyframes barrer{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
 .estadio .bruma{position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 0,rgba(255,232,150,.10),transparent 70%)}
 .estadio .grano{position:absolute;inset:-50%;opacity:.09;mix-blend-mode:overlay;
@@ -232,7 +236,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 .pz-a{fill:#17552d}.pz-b{fill:#1a5f33}
 .pz-l{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2.2}
 .pz-p{fill:rgba(255,255,255,.85)}
-.tok circle{stroke:#06110b;stroke-width:2.5}
+.tok .cam{stroke:#06110b;stroke-width:2;stroke-linejoin:round}
 .tok-mp{fill:var(--mp)}.tok-banco{fill:var(--banco)}.tok-efectivo{fill:var(--efectivo)}
 .tok-debe{fill:#2a0f0d;stroke:var(--debe)!important;stroke-width:2.5;stroke-dasharray:4 3}
 .tok-libre{fill:rgba(0,0,0,.18);stroke:rgba(255,255,255,.35)!important;stroke-width:1.5;stroke-dasharray:3 4}
@@ -242,7 +246,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 .tok-nom{font:600 11px var(--texto);fill:#eef5ef}
 .tok-in{transform-box:fill-box;transform-origin:50% 30%}
 .tok.nuevo .tok-in{animation:ficha 1s cubic-bezier(.3,1.6,.5,1)}
-.tok.nuevo circle:first-of-type{filter:drop-shadow(0 0 8px rgba(255,212,71,.9))}
+.tok.nuevo .cam{filter:drop-shadow(0 0 8px rgba(255,212,71,.9))}
 @keyframes ficha{0%{transform:scale(.3)}50%{transform:scale(1.45)}100%{transform:scale(1)}}
 .acc-equipos{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
 .acc-equipos .nota{flex-basis:100%;text-align:right}
@@ -256,8 +260,9 @@ h2{font-size:clamp(28px,4vw,40px)}
 .equipo ol{margin:10px 0 0;padding-left:20px;display:grid;gap:3px;font-size:14px;font-weight:600}
 .equipo li.debe{color:#ff8a83}
 .equipo li.debe::after{content:" · debe";font-weight:400;font-size:12px}
-.tok-pech{fill:none;stroke:var(--accent)!important;stroke-width:3!important}
-@media (max-width:700px){.equipos{grid-template-columns:1fr}.acc-equipos .btn.primario{flex:1}}
+.tok-pech{fill:rgba(255,212,71,.94);stroke:#7a5a00;stroke-width:1}
+.tok-pech + .tok-num{fill:#1d1600}
+@media (max-width:700px){.equipos{grid-template-columns:1fr}.acc-equipos .btn{flex:1 1 auto}.acc-equipos .btn.primario{flex-basis:100%}}
 .pie-cancha{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--tiza-3)}
 
 /* dona */
@@ -268,7 +273,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 .dona-graf.dibujar svg{animation:dona 1.2s cubic-bezier(.3,.9,.3,1) both}
 @keyframes dona{from{transform:rotate(-270deg) scale(.5);opacity:0}to{transform:rotate(-90deg) scale(1);opacity:1}}
 .dona-centro{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-.dona-centro strong{font:400 34px/1 var(--display)}
+.dona-centro strong{font:400 34px/1 var(--num-tit)}
 .dona-centro span{font-size:11px;color:var(--tiza-3);text-transform:uppercase;letter-spacing:.12em}
 .dona ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .dona li{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;font-size:14px}
@@ -354,14 +359,14 @@ td.cero{color:var(--efectivo)}
 .fecha-card{display:grid;grid-template-columns:58px 1fr auto;gap:14px;align-items:center;width:100%;padding:10px;border-radius:14px;border:1px solid var(--borde);background:rgba(0,0,0,.2);text-align:left;cursor:pointer;transition:border-color .2s,transform .2s}
 .fecha-card:hover{border-color:var(--borde-2);transform:translateX(3px)}
 .fecha-card[aria-current="true"]{border-color:var(--accent)}
-.fecha-card .dia{display:grid;place-items:center;height:58px;border-radius:10px;background:rgba(238,245,239,.06);font:400 28px/1 var(--display)}
+.fecha-card .dia{display:grid;place-items:center;height:58px;border-radius:10px;background:rgba(238,245,239,.06);font:400 28px/1 var(--num-tit)}
 .fecha-card .dia small{font:700 10px var(--texto);text-transform:uppercase;letter-spacing:.1em;color:var(--tiza-3)}
 .fecha-card .info{font-weight:600;font-size:14px;min-width:0}
 .fecha-card .info::first-letter{text-transform:uppercase}
 .fecha-card .info small{color:var(--tiza-3);font-weight:400}
 .barrita{display:block;height:4px;border-radius:2px;background:var(--libre);margin-top:8px;overflow:hidden}
 .barrita i{display:block;height:100%;background:var(--accent);border-radius:inherit}
-.fecha-card .pct{font:400 24px var(--display)}
+.fecha-card .pct{font:400 24px var(--num-tit)}
 
 /* ---------- organizador ---------- */
 #organizador .envoltura{display:grid;gap:16px}
@@ -376,6 +381,37 @@ td.cero{color:var(--efectivo)}
 .pin-form code{color:var(--accent)}
 
 /* ---------- toast, gol, confeti ---------- */
+/* cuenta regresiva */
+.cuenta{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin:-6px 0 24px}
+.cuenta-tit{font:400 22px/1 var(--mano);color:var(--accent);transform:rotate(-3deg);align-self:center}
+.cuenta-grupo{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 12px 8px;border-radius:12px;background:rgba(0,0,0,.45);border:1px solid var(--borde)}
+.cuenta-grupo span{font-size:34px;color:var(--accent);filter:drop-shadow(0 0 8px rgba(255,212,71,.45))}
+.cuenta-grupo small{font:700 10px/1 var(--texto);letter-spacing:.14em;text-transform:uppercase;color:var(--tiza-3)}
+.cuenta.jugando .cuenta-grupo{display:none}
+/* el +1 que levanta el árbitro cuando alguien paga */
+.kpi.principal{position:relative;overflow:hidden}
+.mas-uno{position:absolute;right:14px;top:14px;font-size:54px;color:#3dff6e;filter:drop-shadow(0 0 12px rgba(61,255,110,.6));opacity:0;pointer-events:none}
+.mas-uno.ver{animation:mas-uno 2s cubic-bezier(.3,1.4,.5,1) forwards}
+@keyframes mas-uno{0%{opacity:0;transform:translateY(30px) scale(.6)}15%{opacity:1;transform:none}75%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-16px)}}
+/* fila recién pagada en la planilla */
+tr.recien{animation:recien 2.4s ease-out}
+@keyframes recien{0%,30%{background:rgba(127,224,138,.22)}100%{background:transparent}}
+/* tarjetas de la tabla de posiciones */
+.tarjeta{display:inline-block;width:11px;height:15px;border-radius:2px;margin-left:8px;vertical-align:-2px;transform:rotate(8deg);box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.tarjeta.amarilla{background:#ffd447}
+.tarjeta.roja{background:#ff3b30}
+.tarjeta.roja + .tarjeta{display:none}
+/* encendido de los leds al abrir */
+.led.prende circle.on{animation:prender-led .45s steps(2,end) both;animation-delay:var(--d,0ms)}
+@keyframes prender-led{0%{fill:rgba(225,232,228,.15)}100%{fill:currentColor}}
+/* pelota de la curva */
+.cv-pelota{filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+/* sonido */
+.sonido{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--borde-2);background:var(--panel-2);cursor:pointer;font-size:16px;flex:none}
+.sonido[aria-pressed="true"]{border-color:var(--accent);background:rgba(255,212,71,.12)}
+/* barra fija para avisar que pagaste (celular) */
+.barra-pago{display:none}
+.num-t{font-family:var(--num-tit);font-size:1.04em;letter-spacing:.02em}
 .toast{position:fixed;left:50%;bottom:22px;z-index:60;translate:-50% 0;max-width:calc(100% - 32px);padding:12px 18px;border-radius:14px;background:#f4f8f5;color:#06110b;font-weight:700;box-shadow:0 20px 40px -10px rgba(0,0,0,.6);opacity:0;transform:translateY(20px) scale(.96);transition:all .35s cubic-bezier(.3,1.4,.5,1);pointer-events:none}
 .toast.ver{opacity:1;transform:none}
 .toast.error{background:var(--debe);color:#fff}
@@ -425,6 +461,11 @@ td.cero{color:var(--efectivo)}
   @keyframes salto{0%,100%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.6,.35,1)}50%{transform:translateY(-120px);animation-timing-function:cubic-bezier(.65,0,.8,.4)}}
   .pelota-pista{display:none}
   .lista-videos img{width:84px}
+  .barra-pago{display:flex;align-items:center;justify-content:center;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;min-height:52px;border-radius:14px;background:linear-gradient(180deg,#ffe066,var(--accent) 45%,var(--accent-2));color:var(--accent-ink);font-weight:800;font-size:16px;text-decoration:none;box-shadow:0 12px 30px -8px rgba(0,0,0,.7),0 6px 20px -6px rgba(255,212,71,.5);transition:transform .35s cubic-bezier(.3,1.3,.5,1),opacity .3s}
+  .barra-pago.oculta,.barra-pago[data-cerrada="1"]{transform:translateY(140%);opacity:0;pointer-events:none}
+  body.con-barra .toast{bottom:84px}
+  .cuenta-grupo span{font-size:26px}
+  .cuenta{gap:10px}
   th:nth-child(6),td:nth-child(6){display:none}
 }
 @media (max-width:420px){
@@ -455,6 +496,7 @@ td.cero{color:var(--efectivo)}
       <b><span>Caja del </span><em>Fulbito</em></b>
     </a>
     <div class="selector"><select id="sel-partido" aria-label="Elegir partido"></select></div>
+    <button class="sonido" id="btn-sonido" type="button" aria-pressed="false" title="Silbato del árbitro" aria-label="Activar sonido">🔇</button>
     <div class="vivo" id="vivo" role="status"><i></i><span id="vivo-txt">Conectando</span></div>
   </div>
 </header>
@@ -470,11 +512,18 @@ td.cero{color:var(--efectivo)}
         <div class="etiqueta" id="t-eyebrow">Próximo partido</div>
         <h1 class="partido-dia" id="t-dia">Cargando la fecha…</h1>
         <div class="partido-meta" id="t-meta"></div>
+        <div class="cuenta" id="cuenta" hidden>
+          <span class="cuenta-tit" id="cuenta-tit">Faltan</span>
+          <div class="cuenta-grupo"><span id="c-dias">00</span><small>días</small></div>
+          <div class="cuenta-grupo"><span id="c-horas">00</span><small>horas</small></div>
+          <div class="cuenta-grupo"><span id="c-min">00</span><small>min</small></div>
+        </div>
         <div class="acciones-hero">
           <a class="btn primario" href="#planilla" data-iman>Avisar que pagué</a>
           <a class="btn wsp" id="btn-wsp" href="#" target="_blank" rel="noopener" hidden>Mandar comprobante</a>
           <button class="btn" id="btn-copiar-link" type="button">Copiar link</button>
           <button class="btn" id="btn-copiar-resumen" type="button">Copiar resumen</button>
+          <button class="btn" id="btn-imagen" type="button">Compartir imagen</button>
         </div>
       </div>
       <div class="pelota-zona" id="pelota-zona">
@@ -495,6 +544,7 @@ td.cero{color:var(--efectivo)}
           <span class="etiqueta">Pagaron</span>
           <strong aria-live="polite"><span id="t-pagaron">0</span><small><span class="barra-led">/</span><span id="t-cupo">18</span></small></strong>
           <p id="t-led-sub"></p>
+          <div class="mas-uno" id="mas-uno" aria-hidden="true"></div>
         </div>
         <div class="kpi ok"><span class="etiqueta">Recaudado</span><strong id="t-recaudado">$0</strong></div>
         <div class="kpi falta"><span class="etiqueta">Falta</span><strong id="t-falta">$0</strong></div>
@@ -648,6 +698,7 @@ td.cero{color:var(--efectivo)}
   <div class="pin-form" id="zona-org"></div>
 </footer>
 
+<a class="barra-pago" id="barra-pago" href="#planilla">Avisar que pagué</a>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="gol" id="gol" hidden><b>¡Goooool!<small>Pagaron todos. Caja cerrada.</small></b></div>
 <canvas class="confeti" id="confeti" hidden></canvas>
@@ -681,15 +732,17 @@ td.cero{color:var(--efectivo)}
   let pagadosAntes = null, partidoAntes = null, nuevos = new Set();
   const propios = new Set(); // pagos cargados desde esta pantalla: no se anuncian dos veces
   let dibujado = false;
+  let encendido = false; // la primera vez los leds se prenden de a uno
 
   // ---------- tildes para la fuente de los títulos ----------
   const TILDES = { "á": ["A", "agudo"], "é": ["E", "agudo"], "í": ["I", "agudo"], "ó": ["O", "agudo"], "ú": ["U", "agudo"], "ü": ["U", "dieresis"], "ñ": ["N", "tilde"] };
   function conTildes(el) {
     if (!el) return;
     const txt = el.textContent;
-    if (!/[áéíóúüñ]/i.test(txt)) return;
+    if (!/[áéíóúüñ\d]/i.test(txt)) return;
     el.innerHTML = [...txt].map((c) => {
       const t = TILDES[c.toLowerCase()];
+      if (/\d/.test(c)) return `<span class="num-t">${c}</span>`;
       return t ? `<span class="ac ${t[1]}">${t[0]}</span>` : esc(c);
     }).join("");
   }
@@ -785,7 +838,7 @@ td.cero{color:var(--efectivo)}
     // cada tramo con su propia curva: así el impacto cae justo en su momento
     const anim = $("#patada").animate(cuadros.map((k) => ({ easing: "cubic-bezier(.3,.6,.4,1)", ...k })), { duration: dur });
     setTimeout(() => {
-      if (resultado === "gol") { sacudir("sacude"); if (alAzar) gritar("¡Gooool!", "g-gol"); }
+      if (resultado === "gol") { sacudir("sacude"); if (alAzar) { gritar("¡Gooool!", "g-gol"); silbato(1); } }
       if (resultado === "palo") gritar("¡Palo!", "g-palo");
       if (resultado === "afuera") gritar(["¡Afuera!", "¡A la tribuna!", "¡Uhhh!"][Math.floor(Math.random() * 3)], "g-afuera");
     }, dur * impacto);
@@ -913,7 +966,7 @@ td.cero{color:var(--efectivo)}
   function ledChar(ch) {
     if (/\d/.test(ch)) {
       const on = PRENDIDAS[+ch];
-      return `<svg viewBox="-.1 -.1 7.2 14.2" aria-hidden="true"><path class="placa" fill-rule="evenodd" d="${PLACA}"/>${CELDAS.map(([c, r], i) => `<circle cx="${c + .5}" cy="${r + .5}" r=".36"${on[i] ? ' class="on"' : ""}/>`).join("")}</svg>`;
+      return `<svg viewBox="-.1 -.1 7.2 14.2" aria-hidden="true"><path class="placa" fill-rule="evenodd" d="${PLACA}"/>${CELDAS.map(([c, r], i) => `<circle cx="${c + .5}" cy="${r + .5}" r=".36"${on[i] ? ' class="on"' + (encendido ? "" : ` style="--d:${Math.round(Math.random() * 900)}ms"`) : ""}/>`).join("")}</svg>`;
     }
     if (ch === "." || ch === ",") return `<svg viewBox="-.1 -.1 2.2 14.2" aria-hidden="true"><rect class="placa" x="0" y="12" width="2" height="2"/>${[[0, 12], [1, 12], [0, 13], [1, 13]].map(([c, r]) => `<circle class="on" cx="${c + .5}" cy="${r + .5}" r=".36"/>`).join("")}</svg>`;
     return `<span class="led-sim" aria-hidden="true">${esc(ch)}</span>`;
@@ -926,6 +979,7 @@ td.cero{color:var(--efectivo)}
     const forma = chars.map((c) => (/\d/.test(c) ? "0" : c)).join("");
     if (el.dataset.forma !== forma) {
       el.dataset.forma = forma;
+      el.classList.toggle("prende", !encendido && !reduceMotion);
       el.innerHTML = chars.map(ledChar).join("");
       return;
     }
@@ -963,6 +1017,7 @@ td.cero{color:var(--efectivo)}
     detectarNuevos();
     renderSelector();
     renderTablero();
+    renderCuenta();
     renderCinta();
     renderCancha();
     renderDona();
@@ -974,7 +1029,168 @@ td.cero{color:var(--efectivo)}
     renderHistorial();
     renderOrganizador();
     dibujado = true;
+    if (!encendido) setTimeout(() => { encendido = true; document.querySelectorAll(".led.prende").forEach((e) => e.classList.remove("prende")); }, 1800);
   }
+
+  // el cartel muestra +1 (o +2...) un momento cuando entra un pago
+  function masUno(n) {
+    if (reduceMotion) return;
+    const el = $("#mas-uno");
+    rodar(el, "+" + n);
+    el.classList.remove("ver"); void el.offsetWidth; el.classList.add("ver");
+  }
+
+  // cuenta regresiva hasta el partido, en leds
+  function renderCuenta() {
+    const p = partido(), box = $("#cuenta");
+    if (!p) { box.hidden = true; return; }
+    const ms = inicio(p) - Date.now();
+    if (ms <= -2 * 3600e3) { box.hidden = true; return; }
+    box.hidden = false;
+    box.classList.toggle("jugando", ms <= 0);
+    $("#cuenta-tit").textContent = ms <= 0 ? "¡Se está jugando!" : "Faltan";
+    if (ms <= 0) return;
+    const min = Math.floor(ms / 60e3);
+    const dd = (n) => String(n).padStart(2, "0");
+    rodar($("#c-dias"), dd(Math.min(99, Math.floor(min / 1440))));
+    rodar($("#c-horas"), dd(Math.floor((min % 1440) / 60)));
+    rodar($("#c-min"), dd(min % 60));
+  }
+  setInterval(() => { if (!document.hidden) renderCuenta(); }, 15000);
+
+  // ---------- sonido: silbato del árbitro hecho con el navegador (apagado de entrada) ----------
+  let sonido = store.get("sonido") === "1", audio = null;
+  function silbato(veces = 1) {
+    if (!sonido) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = audio.currentTime + 0.02;
+      for (let i = 0; i < veces; i++) {
+        const t = t0 + i * 0.36, largo = veces > 1 && i === veces - 1 ? 0.75 : 0.22;
+        const o = audio.createOscillator(), vib = audio.createOscillator(), prof = audio.createGain(), vol = audio.createGain();
+        o.frequency.value = 2850; vib.frequency.value = 30; prof.gain.value = 170;
+        vib.connect(prof).connect(o.frequency);
+        vol.gain.setValueAtTime(0, t);
+        vol.gain.linearRampToValueAtTime(0.16, t + 0.02);
+        vol.gain.setValueAtTime(0.16, t + largo);
+        vol.gain.linearRampToValueAtTime(0, t + largo + 0.05);
+        o.connect(vol).connect(audio.destination);
+        o.start(t); vib.start(t); o.stop(t + largo + 0.1); vib.stop(t + largo + 0.1);
+      }
+    } catch {}
+  }
+  function pintarSonido() {
+    const b = $("#btn-sonido");
+    b.textContent = sonido ? "🔊" : "🔇";
+    b.setAttribute("aria-pressed", sonido);
+    b.setAttribute("aria-label", sonido ? "Silenciar" : "Activar sonido");
+  }
+  pintarSonido();
+  $("#btn-sonido").addEventListener("click", () => {
+    sonido = !sonido;
+    store.set("sonido", sonido ? "1" : "0");
+    pintarSonido();
+    silbato(1);
+  });
+
+  // ---------- barra fija "Avisar que pagué" en el celular ----------
+  if ("IntersectionObserver" in window) {
+    const visibles = new Set();
+    const io = new IntersectionObserver((es) => {
+      es.forEach((e) => (e.isIntersecting ? visibles.add(e.target) : visibles.delete(e.target)));
+      $("#barra-pago").classList.toggle("oculta", visibles.size > 0);
+    });
+    [".acciones-hero", "#planilla"].forEach((s) => io.observe($(s)));
+  }
+  document.body.classList.add("con-barra");
+
+  // ---------- imagen para mandar al grupo ----------
+  function dibujarLed(ctx, texto, x, y, alto, color) {
+    const cel = alto / 14;
+    let cx = x;
+    for (const ch of String(texto)) {
+      if (/\d/.test(ch)) {
+        const on = PRENDIDAS[+ch];
+        ctx.fillStyle = "rgba(205,212,208,.08)";
+        CELDAS.forEach(([c, r]) => ctx.fillRect(cx + c * cel, y + r * cel, cel, cel));
+        CELDAS.forEach(([c, r], i) => {
+          ctx.beginPath();
+          ctx.arc(cx + (c + 0.5) * cel, y + (r + 0.5) * cel, cel * (on[i] ? 0.44 : 0.36), 0, 7);
+          ctx.fillStyle = on[i] ? color : "rgba(225,232,228,.15)";
+          ctx.fill();
+        });
+        cx += cel * 7 + cel * 1.6;
+      } else if (ch === ".") {
+        ctx.fillStyle = color;
+        [[0, 12], [1, 12], [0, 13], [1, 13]].forEach(([c, r]) => { ctx.beginPath(); ctx.arc(cx + (c + 0.5) * cel, y + (r + 0.5) * cel, cel * 0.44, 0, 7); ctx.fill(); });
+        cx += cel * 2 + cel * 1.6;
+      } else {
+        ctx.fillStyle = color;
+        ctx.font = `800 ${Math.round(alto * 0.42)}px "Barlow Semi Condensed"`;
+        ctx.textBaseline = "top";
+        ctx.fillText(ch, cx, y + (ch === "/" ? alto * 0.45 : 0));
+        cx += ctx.measureText(ch).width + cel * 1.6;
+      }
+    }
+    return cx;
+  }
+  function envolver(ctx, texto, x, y, ancho, alto) {
+    let linea = "", yy = y;
+    for (const pal of texto.split(" ")) {
+      const prueba = linea ? linea + " " + pal : pal;
+      if (ctx.measureText(prueba).width > ancho && linea) { ctx.fillText(linea, x, yy); linea = pal; yy += alto; }
+      else linea = prueba;
+    }
+    if (linea) ctx.fillText(linea, x, yy);
+    return yy + alto;
+  }
+  async function generarImagen() {
+    const p = partido();
+    if (!p) return toast("Todavía no hay partido.", true);
+    const st = stats(p);
+    await Promise.all(['64px "SF Collegiate Solid"', '80px "Permanent Marker"', '800 40px "Barlow Semi Condensed"', 'italic 700 40px "Barlow Semi Condensed"'].map((f) => document.fonts.load(f).catch(() => {})));
+    const W = 1080, H = 1350, c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const ctx = c.getContext("2d");
+    for (let i = 0; i < W / 120 + 1; i++) { ctx.fillStyle = i % 2 ? "#0e2918" : "#0b2214"; ctx.fillRect(i * 120, 0, 120, H); }
+    const vi = ctx.createRadialGradient(W / 2, H * 0.35, 100, W / 2, H * 0.4, H * 0.8);
+    vi.addColorStop(0, "rgba(0,0,0,0)"); vi.addColorStop(1, "rgba(3,9,6,.85)");
+    ctx.fillStyle = vi; ctx.fillRect(0, 0, W, H);
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#eef5ef"; ctx.font = '64px "SF Collegiate Solid"';
+    ctx.fillText("CAJA DEL", 70, 70);
+    ctx.save(); ctx.translate(70 + ctx.measureText("CAJA DEL ").width, 60); ctx.rotate(-0.06);
+    ctx.fillStyle = "#ffd447"; ctx.font = '72px "Permanent Marker"'; ctx.fillText("Fulbito", 0, 0); ctx.restore();
+    ctx.fillStyle = "#eef5ef"; ctx.font = 'italic 700 46px "Barlow Semi Condensed"';
+    ctx.fillText(`${fechaLarga(p).toUpperCase()} · ${p.hora} HS`, 70, 180);
+    ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillRect(60, 260, W - 120, 300);
+    ctx.fillStyle = "#83998a"; ctx.font = '800 26px "Barlow Semi Condensed"'; ctx.fillText("PAGARON", 90, 285);
+    const fin = dibujarLed(ctx, st.pag.length, 90, 325, 200, "#ffd447");
+    dibujarLed(ctx, "/" + p.cupo, fin + 10, 445, 80, "#b9cabe");
+    ctx.fillStyle = "#83998a"; ctx.fillText("RECAUDADO", 600, 285); ctx.fillText("FALTA", 600, 420);
+    dibujarLed(ctx, pesos(st.recaudado).replace("$", ""), 600, 320, 70, "#7fe08a");
+    dibujarLed(ctx, pesos(st.falta).replace("$", ""), 600, 455, 70, "#ff8a83");
+    let y = 610;
+    ctx.font = '800 30px "Barlow Semi Condensed"'; ctx.fillStyle = "#7fe08a"; ctx.fillText(`✓ PAGARON (${st.pag.length})`, 70, y);
+    ctx.font = '600 34px "Barlow Semi Condensed"'; ctx.fillStyle = "#eef5ef";
+    y = envolver(ctx, st.pag.map((j) => j.nombre).join(" · ") || "Nadie todavía", 70, y + 46, W - 140, 44) + 24;
+    ctx.font = '800 30px "Barlow Semi Condensed"'; ctx.fillStyle = "#ff8a83"; ctx.fillText(`✗ DEBEN (${st.deben.length})`, 70, y);
+    ctx.font = '600 34px "Barlow Semi Condensed"'; ctx.fillStyle = "#eef5ef";
+    y = envolver(ctx, st.deben.map((j) => j.nombre).join(" · ") || "Nadie. ¡Caja cerrada!", 70, y + 46, W - 140, 44);
+    ctx.fillStyle = "#83998a"; ctx.font = '600 28px "Barlow Semi Condensed"';
+    ctx.fillText("Avisá que pagaste en " + location.host, 70, H - 90);
+    const blob = await new Promise((r) => c.toBlob(r, "image/png"));
+    const archivo = new File([blob], `caja-fulbito-${p.fecha}.png`, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      try { await navigator.share({ files: [archivo], text: `⚽ Caja del fútbol ${fechaLarga(p)}` }); return; } catch (e) { if (e.name === "AbortError") return; }
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = archivo.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast("Imagen descargada. Mandala al grupo.");
+  }
+  $("#btn-imagen").addEventListener("click", generarImagen);
 
   // compara con la versión anterior: quién pagó desde la última actualización
   function detectarNuevos() {
@@ -985,6 +1201,7 @@ td.cero{color:var(--efectivo)}
     if (pagadosAntes && partidoAntes === p.id) {
       ahora.forEach((id) => { if (!pagadosAntes.has(id)) nuevos.add(id); });
       const yo = norm(store.get("miNombre"));
+      if (nuevos.size) masUno(nuevos.size);
       const ajenos = p.jugadores.filter((j) => nuevos.has(j.id) && !propios.has(j.id) && norm(j.nombre) !== yo);
       if (ajenos.length) {
         const st = stats(p);
@@ -1058,6 +1275,7 @@ td.cero{color:var(--efectivo)}
     $("#t-destacados").innerHTML = dest.join("");
 
     const completo = st.pag.length === p.cupo && p.cupo > 0;
+    $("#barra-pago").dataset.cerrada = completo || !p.jugadores.length ? "1" : "";
     if (completoAntes === false && completo) festejar();
     completoAntes = completo;
   }
@@ -1163,6 +1381,9 @@ td.cero{color:var(--efectivo)}
     }
   });
 
+  // camiseta y pechera para las fichas de la cancha
+  const CAM = "M-8,-14 L-3.5,-15.5 Q0,-11.5 3.5,-15.5 L8,-14 L15.5,-7 L11,-2 L8.5,-4.5 L8.5,14 L-8.5,14 L-8.5,-4.5 L-11,-2 L-15.5,-7 Z";
+  const PECH = "M-7.2,-12.6 L-3.6,-13.8 Q0,-9.2 3.6,-13.8 L7.2,-12.6 L7.2,12.6 L-7.2,12.6 Z";
   function renderCancha() {
     const p = partido();
     const W = 720, H = 440, m = 18;
@@ -1209,15 +1430,15 @@ td.cero{color:var(--efectivo)}
     slots.forEach((punto, i) => {
       const [x, y] = ubicar(punto);
       const j = orden[i];
-      if (!j) { svg += `<g class="tok" transform="translate(${x},${y})"><circle class="tok-libre" r="14"/></g>`; return; }
+      if (!j) { svg += `<g class="tok" transform="translate(${x},${y})"><path class="cam tok-libre" d="${CAM}"/></g>`; return; }
       const pago = j.estado === "pagado";
       const nombre = j.nombre.length > 12 ? j.nombre.slice(0, 11) + "…" : j.nombre;
       const w = Math.max(44, nombre.length * 6.6 + 16);
       svg += `<g class="tok${nuevos.has(j.id) || mezclado ? " nuevo" : ""}" transform="translate(${x},${y})"><title>${esc(j.nombre)}: ${pago ? "pagó con " + NOMBRE_METODO[j.metodo] : "debe"}</title><g class="tok-in">
-        <circle class="${pago ? "tok-" + j.metodo : "tok-debe"}" r="14"/>
-        ${eq && i % 2 === 0 ? `<circle class="tok-pech" r="19"/>` : ""}<text class="tok-num${pago ? "" : " debe"}" y="4.2" text-anchor="middle">${st.js.indexOf(j) + 1}</text>
-        <rect class="tok-et" x="${-w / 2}" y="21" width="${w}" height="19" rx="9.5"/>
-        <text class="tok-nom" y="34.5" text-anchor="middle">${esc(nombre)}</text></g></g>`;
+        <path class="cam ${pago ? "tok-" + j.metodo : "tok-debe"}" d="${CAM}"/>
+        ${eq && i % 2 === 0 ? `<path class="tok-pech" d="${PECH}"/>` : ""}<text class="tok-num${pago ? "" : " debe"}" y="5.5" text-anchor="middle">${st.js.indexOf(j) + 1}</text>
+        <rect class="tok-et" x="${-w / 2}" y="19" width="${w}" height="19" rx="9.5"/>
+        <text class="tok-nom" y="32.5" text-anchor="middle">${esc(nombre)}</text></g></g>`;
     });
     svg += `</svg>`;
     $("#cancha").innerHTML = svg;
@@ -1279,6 +1500,7 @@ td.cero{color:var(--efectivo)}
       <path class="cv-linea" d="${d}" pathLength="1"/>
       <circle class="cv-halo" cx="${X(t1)}" cy="${Y(acc)}" r="4.5"/>
       <circle class="cv-punto" cx="${X(t1)}" cy="${Y(acc)}" r="4.5"/>
+      ${reduceMotion ? "" : `<g class="cv-pelota"><circle r="6.5" fill="#f4f8f5" stroke="#06110b" stroke-width="1.4"/><path d="M0,-2.7 L2.6,-.8 L1.6,2.2 L-1.6,2.2 L-2.6,-.8Z" fill="#121a15"/><animateMotion dur="1.8s" fill="freeze" rotate="auto" path="${d}"/></g>`}
       <text class="cv-txt" x="${L}" y="${H - 6}">${esc(fmtT(t0))}</text>
       <text class="cv-txt" x="${W - R}" y="${H - 6}" text-anchor="end">Ahora</text></svg>`;
   }
@@ -1297,7 +1519,7 @@ td.cero{color:var(--efectivo)}
     }
     tb.innerHTML = filas.map(({ j, i }) => {
       const pago = j.estado === "pagado";
-      return `<tr class="${norm(j.nombre) === yo ? "yo" : ""}" data-id="${esc(j.id)}">
+      return `<tr class="${norm(j.nombre) === yo ? "yo" : ""}${nuevos.has(j.id) ? " recien" : ""}" data-id="${esc(j.id)}">
         <td class="n">${i + 1}</td>
         <td class="nombre">${esc(j.nombre)}${norm(j.nombre) === yo ? "<small>Vos</small>" : ""}</td>
         <td><span class="pill ${pago ? "pagado" : "debe"}">${pago ? "Pagó" : "Debe"}</span></td>
@@ -1334,14 +1556,14 @@ td.cero{color:var(--efectivo)}
     // solo cuentan las fechas que ya empezaron: un partido de mañana no suma "jugó" ni deuda
     datos.partidos.filter((p) => inicio(p) <= Date.now()).forEach((p) => p.jugadores.forEach((j) => {
       const k = norm(j.nombre);
-      const r = tabla.get(k) || { nombre: j.nombre, jugo: 0, pago: 0, deuda: 0 };
+      const r = tabla.get(k) || { nombre: j.nombre, jugo: 0, pago: 0, deuda: 0, fechasDebe: 0 };
       r.jugo++;
-      if (j.estado === "pagado") r.pago++; else r.deuda += p.precio;
+      if (j.estado === "pagado") r.pago++; else { r.deuda += p.precio; r.fechasDebe++; }
       tabla.set(k, r);
     }));
     const filas = [...tabla.values()].sort((a, b) => b.deuda - a.deuda || b.jugo - a.jugo || a.nombre.localeCompare(b.nombre));
     $("#ranking").innerHTML = filas.length
-      ? filas.slice(0, 40).map((r) => `<tr><td class="nombre">${esc(r.nombre)}</td><td class="num">${r.jugo}</td><td class="num">${r.pago}</td><td class="num ${r.deuda ? "deuda" : "cero"}">${r.deuda ? pesos(r.deuda) : "Al día"}</td></tr>`).join("")
+      ? filas.slice(0, 40).map((r) => `<tr><td class="nombre">${esc(r.nombre)}${r.fechasDebe ? `<span class="tarjeta ${r.fechasDebe > 1 ? "roja" : "amarilla"}" title="Debe ${r.fechasDebe} ${r.fechasDebe > 1 ? "fechas" : "fecha"}"></span>` : ""}</td><td class="num">${r.jugo}</td><td class="num">${r.pago}</td><td class="num ${r.deuda ? "deuda" : "cero"}">${r.deuda ? pesos(r.deuda) : "Al día"}</td></tr>`).join("")
       : `<tr><td colspan="4" class="vacio">Se arma sola cuando se juegue la primera fecha.</td></tr>`;
   }
 
@@ -1575,6 +1797,7 @@ td.cero{color:var(--efectivo)}
     if (reduceMotion) { toast("¡Pagaron todos! Caja cerrada"); return; }
     const g = $("#gol");
     g.hidden = false;
+    silbato(3);
     setTimeout(() => (g.hidden = true), 2800);
     patear(true);
     const c = $("#confeti"), ctx = c.getContext("2d");
