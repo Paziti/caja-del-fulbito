@@ -213,7 +213,9 @@ h2{font-size:clamp(28px,4vw,40px)}
 .tok.nuevo .tok-in{animation:ficha 1s cubic-bezier(.3,1.6,.5,1)}
 .tok.nuevo circle:first-of-type{filter:drop-shadow(0 0 8px rgba(255,212,71,.9))}
 @keyframes ficha{0%{transform:scale(.3)}50%{transform:scale(1.45)}100%{transform:scale(1)}}
-.acc-equipos{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.acc-equipos{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.acc-equipos .nota{flex-basis:100%;text-align:right}
+@media (max-width:700px){.acc-equipos{justify-content:flex-start}.acc-equipos .nota{text-align:left}}
 .equipos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
 .equipo{padding:14px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--borde)}
 .equipo h3{font-size:22px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -223,7 +225,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 .equipo ol{margin:10px 0 0;padding-left:20px;display:grid;gap:3px;font-size:14px;font-weight:600}
 .equipo li.debe{color:#ff8a83}
 .equipo li.debe::after{content:" · debe";font-weight:400;font-size:12px}
-.tok-pech{fill:none;stroke:var(--accent);stroke-width:3!important}
+.tok-pech{fill:none;stroke:var(--accent)!important;stroke-width:3!important}
 @media (max-width:700px){.equipos{grid-template-columns:1fr}.acc-equipos .btn.primario{flex:1}}
 .pie-cancha{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--tiza-3)}
 
@@ -481,7 +483,7 @@ td.cero{color:var(--efectivo)}
     <div class="grilla-3">
       <div class="panel cancha ancho revelar">
         <div class="sec-tit"><div><div class="etiqueta">Formación</div><h2>La cancha</h2></div>
-          <div class="acc-equipos"><button class="btn primario" type="button" id="btn-equipos">Armar equipos</button><button class="btn" type="button" id="btn-copiar-equipos" hidden>Copiar equipos</button><button class="btn chico" type="button" id="btn-sacar-equipos" hidden>Deshacer</button></div></div>
+          <div class="acc-equipos"><button class="btn primario" type="button" id="btn-equipos">Armar equipos</button><button class="btn" type="button" id="btn-copiar-equipos" hidden>Copiar equipos</button><button class="btn chico peligro" type="button" id="btn-sacar-equipos" hidden>Borrar equipos</button><span class="nota" id="equipos-nota"></span></div></div>
         <div id="cancha"></div>
         <div class="equipos" id="equipos" hidden></div>
         <div class="pie-cancha"><span id="cancha-nota"></span><span>Color = cómo pagó · Borde rojo = debe</span></div>
@@ -918,7 +920,7 @@ td.cero{color:var(--efectivo)}
     ].join("");
     rodar($("#t-pagaron"), st.pag.length);
     $("#t-cupo").textContent = p.cupo;
-    $("#t-led-sub").textContent = st.pag.length === p.cupo ? "Pagaron todos. Caja cerrada." : `${st.deben.length} deben · ${st.libres} lugares libres`;
+    $("#t-led-sub").textContent = st.pag.length === p.cupo ? "Pagaron todos. Caja cerrada." : `${st.deben.length} deben · ${st.libres} ${st.libres === 1 ? "lugar libre" : "lugares libres"}`;
     rodar($("#t-recaudado"), pesos(st.recaudado));
     rodar($("#t-objetivo"), pesos(st.objetivo));
     rodar($("#t-falta"), pesos(st.falta));
@@ -977,53 +979,73 @@ td.cero{color:var(--efectivo)}
     return [1, ...lineas.filter(Boolean)];
   }
 
-  // ---------- armar equipos al azar (se guarda en este navegador) ----------
-  let mezclado = false;
+  // ---------- equipos: se sortean en el servidor y los ve todo el mundo ----------
+  let mezclado = false, equiposVistos = null;
   const N_EQ = ["Con pechera", "Sin pechera"];
+  const MIN_ANTES = 30;
+  const inicio = (p) => new Date(`${p.fecha}T${p.hora}:00-03:00`).getTime();
   function equiposDe(p) {
-    let e; try { e = JSON.parse(store.get("equipos:" + p.id) || "null"); } catch { e = null; }
-    if (!e) return null;
+    const e = p.equipos;
+    if (!e || !e.a) return null;
     const ids = new Set(p.jugadores.map((j) => j.id));
     const a = e.a.filter((id) => ids.has(id)), b = e.b.filter((id) => ids.has(id));
-    // si el organizador agregó gente después, va al equipo más corto
+    // si el organizador cambió a alguien después del sorteo, el nuevo va al equipo más corto
     p.jugadores.forEach((j) => { if (!a.includes(j.id) && !b.includes(j.id)) (a.length <= b.length ? a : b).push(j.id); });
     return a.length + b.length ? { a, b } : null;
   }
-  function armarEquipos() {
-    const p = partido();
-    if (!p || p.jugadores.length < 2) return toast("Hacen falta al menos 2 anotados para armar equipos.", true);
-    const ids = p.jugadores.map((j) => j.id);
-    for (let i = ids.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [ids[i], ids[k]] = [ids[k], ids[i]]; }
-    const mitad = Math.ceil(ids.length / 2);
-    store.set("equipos:" + p.id, JSON.stringify({ a: ids.slice(0, mitad), b: ids.slice(mitad) }));
-    mezclado = !reduceMotion;
-    renderCancha();
-    patear(true);
-    toast("Equipos armados. Tocá de nuevo para mezclar otra vez.");
+  // qué falta para poder armar (null = se puede)
+  function bloqueoEquipos(p) {
+    const faltan = p.cupo - p.jugadores.length;
+    const desde = inicio(p) - MIN_ANTES * 60e3;
+    const hhmm = new Date(desde).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Argentina/Buenos_Aires" });
+    const motivos = [];
+    if (faltan > 0) motivos.push(`${faltan === 1 ? "falta" : "faltan"} ${faltan} para llegar a ${p.cupo}`);
+    if (Date.now() < desde) motivos.push(`se habilita a las ${hhmm}`);
+    return motivos.length ? "🔒 " + motivos.join(" · ").replace(/^./, (c) => c.toUpperCase()) : null;
   }
-  function renderEquipos(eq, st, vertical) {
-    const box = $("#equipos");
-    $("#btn-equipos").textContent = eq ? "Mezclar de nuevo" : "Armar equipos";
-    $("#btn-equipos").disabled = st.js.length < 2;
-    $("#btn-copiar-equipos").hidden = $("#btn-sacar-equipos").hidden = box.hidden = !eq;
+  async function armarEquipos() {
+    const p = partido(); if (!p) return;
+    $("#btn-equipos").disabled = true;
+    try { await api("armarEquipos", { partidoId: p.id }); await cargar(); }
+    catch (err) { toast(err.message, true); renderCancha(); }
+  }
+  function renderEquipos(p, eq, st, vertical) {
+    const box = $("#equipos"), btn = $("#btn-equipos");
+    // cuando aparecen equipos nuevos (los armó cualquiera), todos ven el festejo
+    const firmaEq = p.equipos?.armado || null;
+    if (equiposVistos && equiposVistos.pid === p.id && firmaEq && firmaEq !== equiposVistos.firma) {
+      toast("⚽ ¡Equipos armados!"); patear(true);
+    }
+    equiposVistos = { pid: p.id, firma: firmaEq };
+    const bloqueo = bloqueoEquipos(p);
+    btn.hidden = !!eq && !esOrganizador;
+    btn.textContent = eq ? "Mezclar de nuevo" : "Armar equipos";
+    btn.disabled = !!bloqueo;
+    $("#equipos-nota").textContent = eq
+      ? (p.equipos.por === "organizador" ? "Sorteados por el organizador" : "Sorteados al azar")
+      : bloqueo || "¡Listo! Cualquiera puede sortearlos, una sola vez.";
+    $("#btn-copiar-equipos").hidden = box.hidden = !eq;
+    $("#btn-sacar-equipos").hidden = !eq || !esOrganizador;
     if (!eq) return;
     const lado = vertical ? ["arriba", "abajo"] : ["izquierda", "derecha"];
     const lista = (ids) => ids.map((id) => st.js.find((j) => j.id === id)).filter(Boolean)
       .map((j) => `<li class="${j.estado === "pagado" ? "" : "debe"}">${esc(j.nombre)}</li>`).join("");
     box.innerHTML = [eq.a, eq.b].map((ids, k) => `<div class="equipo ${k ? "b" : "a"}"><h3>${N_EQ[k]}<small>${ids.length} · ${lado[k]}</small></h3><ol>${lista(ids)}</ol></div>`).join("");
   }
-  document.addEventListener("click", (e) => {
+  // la hora de habilitación llega sola: se revisa cada 20 s
+  setInterval(() => { const p = partido(); if (p && !p.equipos) renderCancha(); }, 20000);
+  document.addEventListener("click", async (e) => {
     const t = e.target.closest("button");
     if (!t) return;
     const p = partido();
     if (t.id === "btn-equipos") armarEquipos();
-    if (t.id === "btn-sacar-equipos" && p) { store.del("equipos:" + p.id); renderCancha(); }
+    if (t.id === "btn-sacar-equipos" && p) {
+      try { await api("sacarEquipos", { partidoId: p.id }); toast("Equipos borrados"); cargar(); } catch (err) { toast(err.message, true); }
+    }
     if (t.id === "btn-copiar-equipos" && p) {
       const eq = equiposDe(p); if (!eq) return;
       const nom = (ids) => ids.map((id) => p.jugadores.find((j) => j.id === id)?.nombre).filter(Boolean).join(", ");
-      copiar(`⚽ Equipos ${fechaLarga(p)}
-🟡 ${N_EQ[0]}: ${nom(eq.a)}
-⚪ ${N_EQ[1]}: ${nom(eq.b)}`, "Equipos copiados. Pegalos en el grupo.");
+      copiar(`⚽ Equipos ${fechaLarga(p)}\n🟡 ${N_EQ[0]}: ${nom(eq.a)}\n⚪ ${N_EQ[1]}: ${nom(eq.b)}`, "Equipos copiados. Pegalos en el grupo.");
     }
   });
 
@@ -1066,6 +1088,7 @@ td.cero{color:var(--efectivo)}
       <rect class="pz-l" x="${m - 10}" y="${H / 2 - 24}" width="10" height="48"/><rect class="pz-l" x="${W - m}" y="${H / 2 - 24}" width="10" height="48"/>
       <circle class="pz-p" cx="${m + 62}" cy="${H / 2}" r="2"/><circle class="pz-p" cx="${W - m - 62}" cy="${H / 2}" r="2"/></g>`;
     const eq = equiposDe(p);
+    if (!reduceMotion && equiposVistos && equiposVistos.pid === p.id && p.equipos?.armado && p.equipos.armado !== equiposVistos.firma) mezclado = true;
     const orden = eq
       ? Array.from({ length: p.cupo }, (_, i) => (i % 2 === 0 ? eq.a[i / 2] : eq.b[(i - 1) / 2])).map((id) => st.js.find((j) => j.id === id))
       : st.js;
@@ -1086,7 +1109,7 @@ td.cero{color:var(--efectivo)}
     $("#cancha").innerHTML = svg;
     $("#cancha").dataset.vertical = vertical ? "1" : "";
     mezclado = false;
-    renderEquipos(eq, st, vertical);
+    renderEquipos(p, eq, st, vertical);
     $("#cancha-nota").textContent = `${st.js.length} anotados · ${st.libres} libres`;
   }
 

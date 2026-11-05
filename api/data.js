@@ -1,7 +1,9 @@
 // API de la página.
 // GET  /api/data            -> todos los partidos con sus jugadores
 // POST /api/data {accion}   -> guardar/borrar partidos, jugadores y videos
+import { randomInt } from "node:crypto";
 import {
+  inicioPartido, MIN_ANTES_EQUIPOS, leerJugadores,
   redis, K_PARTIDOS, kJug, almacenamiento, txt, limpiarPartido, leerPartido, leerTodo, guardarJugador, cargarLista,
 } from "../lib/store.js";
 
@@ -96,6 +98,41 @@ export default async function handler(req, res) {
         p.videos = p.videos.filter((v) => v.yt !== body.yt);
         await redis([["HSET", K_PARTIDOS, p.id, JSON.stringify(p)]]);
         return res.status(200).json({ ok: true, partido: p });
+      }
+
+      case "armarEquipos": {
+        // cualquiera puede armarlos una vez: con la lista completa y desde 30 min antes. Mezclar de nuevo, solo el organizador.
+        const p = await leerPartido(body.partidoId);
+        if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
+        const js = await leerJugadores(p.id);
+        if (js.length < p.cupo) return res.status(409).json({ error: `${p.cupo - js.length === 1 ? "Falta" : "Faltan"} ${p.cupo - js.length} para completar los ${p.cupo}. Los equipos se arman con la lista completa.` });
+        const desde = inicioPartido(p) - MIN_ANTES_EQUIPOS * 60e3;
+        if (Date.now() < desde) {
+          const hhmm = new Date(desde).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Argentina/Buenos_Aires" });
+          return res.status(409).json({ error: `Los equipos se arman ${MIN_ANTES_EQUIPOS} minutos antes del partido, desde las ${hhmm}.` });
+        }
+        if (p.equipos && !pinOk) return res.status(409).json({ error: "Los equipos ya están armados. Solo el organizador puede mezclar de nuevo." });
+        // si dos tocan a la vez, gana el primero
+        if (!pinOk && !(await redis([["SET", `fulbito:armando:${p.id}`, "1", "NX", "EX", "15"]]))[0]) {
+          return res.status(409).json({ error: "Alguien los está armando en este momento. Esperá unos segundos." });
+        }
+        const ids = js.map((j) => j.id);
+        for (let i = ids.length - 1; i > 0; i--) { const k = randomInt(i + 1); [ids[i], ids[k]] = [ids[k], ids[i]]; }
+        const mitad = Math.ceil(ids.length / 2);
+        const fresco = (await leerPartido(p.id)) || p;
+        if (fresco.equipos && !pinOk) return res.status(409).json({ error: "Los equipos ya están armados." });
+        fresco.equipos = { a: ids.slice(0, mitad), b: ids.slice(mitad), armado: new Date().toISOString(), por: pinOk ? "organizador" : "web" };
+        await redis([["HSET", K_PARTIDOS, p.id, JSON.stringify(fresco)]]);
+        return res.status(200).json({ ok: true, partido: fresco });
+      }
+
+      case "sacarEquipos": {
+        exigePin();
+        const p = await leerPartido(body.partidoId);
+        if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
+        p.equipos = null;
+        await redis([["HSET", K_PARTIDOS, p.id, JSON.stringify(p)]]);
+        return res.status(200).json({ ok: true });
       }
 
       default:
