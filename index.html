@@ -869,6 +869,8 @@ tr.recien{animation:recien 2.4s ease-out}
   $("#salto").addEventListener("click", () => patear(true, true));
   $("#salto").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); patear(true, true); } });
 
+  addEventListener("resize", () => velocidadCinta());
+  if (document.fonts) document.fonts.ready.then(velocidadCinta);
   // ---------- efectos ----------
   // parallax del fondo (líneas de cal y césped se mueven más lento que la página)
   if (!reduceMotion) {
@@ -1325,6 +1327,14 @@ tr.recien{animation:recien 2.4s ease-out}
     const tira = items.map((t) => `<span>${t}</span>`).join("");
     const cinta = $("#cinta"), html = tira + tira;
     if (cinta.dataset.html !== html) { cinta.innerHTML = html; cinta.dataset.html = html; }
+    velocidadCinta();
+  }
+  // la cinta corre a la misma velocidad (px por segundo) sin importar el largo del texto ni la pantalla
+  function velocidadCinta() {
+    const cinta = $("#cinta"), mitad = cinta.scrollWidth / 2;
+    if (!mitad) return;
+    const dur = Math.max(10, mitad / 75).toFixed(1) + "s";
+    if (cinta.style.animationDuration !== dur) cinta.style.animationDuration = dur;
   }
 
   // posiciones de una formación para n jugadores en media cancha
