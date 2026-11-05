@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#06110b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Doto:wght@700;900&family=Permanent+Marker&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Doto:wght@700;900&family=Permanent+Marker&family=Barlow+Semi+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white' stroke='%2306110b' stroke-width='1.5'/%3E%3Cpath d='M16 9.5l5 3.6-1.9 5.9h-6.2L11 13.1z' fill='%2306110b'/%3E%3C/svg%3E">
 <style>
 /* Concepto: partido de noche bajo los reflectores. Césped con franjas de corte, líneas de cal,
@@ -36,10 +36,10 @@
   --debe-suave:rgba(255,93,85,.14);
   --libre:rgba(238,245,239,.10);
   --radio:14px;
-  /* estencil de paredón de cancha para títulos, tablero de puntos para las cifras,
+  /* letra de afiche de partido para títulos, tablero de puntos para las cifras,
      fibrón de trapo de hinchada para los gritos, condensada de zócalo de TV para leer */
-  --display:"Saira Stencil One",Impact,sans-serif;
-  --marcador:"Doto","Saira Stencil One",monospace;
+  --display:"Anton",Impact,"Arial Narrow",sans-serif;
+  --marcador:"Doto","Anton",monospace;
   --mano:"Permanent Marker","Comic Sans MS",cursive;
   --texto:"Barlow Semi Condensed",system-ui,sans-serif;
   --sy:0;
@@ -119,7 +119,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 .hero-txt{min-width:0}
 .hero .etiqueta{color:var(--accent);display:flex;align-items:center;gap:10px;font:400 22px/1 var(--mano);letter-spacing:.02em;text-transform:none;transform:rotate(-2deg);transform-origin:0 50%}
 .hero .etiqueta::before{content:"";width:28px;height:2px;background:currentColor}
-.partido-dia{font-size:clamp(38px,6.1vw,80px);line-height:.92;margin:14px 0 18px;text-wrap:balance}
+.partido-dia{font-size:clamp(46px,8vw,104px);line-height:.9;margin:14px 0 18px;text-wrap:balance}
 .partido-dia::first-letter{text-transform:uppercase}
 .partido-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
 .partido-meta span{display:inline-flex;align-items:center;padding:7px 12px;border:1px solid var(--borde-2);border-radius:999px;background:rgba(5,14,9,.55);font-size:13px;color:var(--tiza-2)}
