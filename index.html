@@ -58,16 +58,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 ::selection{background:var(--accent);color:var(--accent-ink)}
 
 /* ---------- estadio de fondo ---------- */
-.estadio{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.estadio{position:fixed;top:0;left:0;right:0;height:100vh;height:100lvh;z-index:-1;overflow:hidden;pointer-events:none;transform:translateZ(0)}
 .estadio .cesped{position:absolute;inset:-10% -10% -10% -10%;
   background:
     radial-gradient(120% 70% at 50% 40%,transparent 30%,rgba(3,9,6,.85) 85%),
     repeating-linear-gradient(90deg,var(--cesped-1) 0 9vw,var(--cesped-2) 9vw 18vw);
-  transform:perspective(900px) rotateX(18deg) translateY(calc(var(--sy) * -0.08px));transform-origin:50% 0}
-.estadio .cal{position:absolute;left:50%;top:calc(560px - var(--sy) * 0.25px);width:min(70vw,620px);aspect-ratio:1;translate:-50% -50%;opacity:.16}
+  transform:perspective(900px) rotateX(18deg) translate3d(0,calc(var(--sy) * -0.08px),0);transform-origin:50% 0;will-change:transform}
+.estadio .cal{position:absolute;left:50%;top:560px;width:min(70vw,620px);aspect-ratio:1;translate:-50% -50%;opacity:.16;transform:translate3d(0,calc(var(--sy) * -0.25px),0);will-change:transform}
 .estadio .cal::before{content:"";position:absolute;inset:0;border:3px solid var(--tiza);border-radius:50%}
 .estadio .cal::after{content:"";position:absolute;left:50%;top:-200vh;bottom:-200vh;width:3px;background:var(--tiza);translate:-50% 0}
-.estadio .luz{position:absolute;top:-30vh;width:70vw;height:140vh;opacity:.55;mix-blend-mode:screen;filter:blur(6px);
+.estadio .luz{position:absolute;top:-30vh;width:70vw;height:140vh;will-change:transform,opacity;opacity:.55;mix-blend-mode:screen;filter:blur(6px);
   background:conic-gradient(from 180deg at 50% 0,transparent 160deg,rgba(255,244,200,.22) 175deg,rgba(255,250,225,.30) 180deg,rgba(255,244,200,.22) 185deg,transparent 200deg)}
 .estadio .luz.izq{left:-22vw;rotate:-28deg;transform-origin:50% 0;animation:encender 1.6s linear both,barrer 11s ease-in-out 1.6s infinite alternate}
 .estadio .luz.der{right:-22vw;rotate:28deg;transform-origin:50% 0;animation:encender 1.6s linear .3s both,barrer 13s ease-in-out 1.9s infinite alternate-reverse}
@@ -77,7 +77,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .estadio .bruma{position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 0,rgba(255,232,150,.10),transparent 70%)}
 .estadio .grano{position:absolute;inset:-50%;opacity:.09;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation:grano 1.2s steps(6) infinite}
+  animation:grano 1.2s steps(6) infinite;will-change:transform}
 @keyframes grano{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
 
 /* ---------- estructura ---------- */
@@ -118,13 +118,16 @@ h2{font-size:clamp(28px,4vw,40px)}
 .cinta-sello{flex:none;display:flex;align-items:center;gap:8px;padding:0 14px 0 16px;background:var(--debe);color:#fff;font-weight:800;clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);padding-right:24px}
 .cinta-sello::before{content:"";width:7px;height:7px;border-radius:50%;background:#fff;animation:parpadeo 1s steps(2) infinite}
 @keyframes parpadeo{50%{opacity:.2}}
-.cinta-via{flex:1;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.cinta-pista{display:flex;width:max-content;animation:correr 38s linear infinite}
+.cinta-via{flex:1;position:relative;overflow:hidden;contain:paint}
+.cinta-via::before,.cinta-via::after{content:"";position:absolute;top:0;bottom:0;width:4%;z-index:1;pointer-events:none}
+.cinta-via::before{left:0;background:linear-gradient(90deg,#0a1a10,transparent)}
+.cinta-via::after{right:0;background:linear-gradient(270deg,#0a1a10,transparent)}
+.cinta-pista{display:flex;width:max-content;animation:correr 38s linear infinite;will-change:transform;backface-visibility:hidden}
 .cinta:hover .cinta-pista{animation-play-state:paused}
 .cinta-pista span{padding:0 18px;white-space:nowrap;color:var(--tiza-2)}
 .cinta-pista span b{color:var(--tiza)}
 .cinta-pista span::after{content:"⚽";margin-left:36px;font-size:10px;opacity:.6}
-@keyframes correr{to{transform:translateX(-50%)}}
+@keyframes correr{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
 
 /* ---------- hero ---------- */
 .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:center;padding-top:44px}
@@ -870,9 +873,10 @@ tr.recien{animation:recien 2.4s ease-out}
   // parallax del fondo (líneas de cal y césped se mueven más lento que la página)
   if (!reduceMotion) {
     let pend = false;
+    const estadio = document.querySelector(".estadio");
     addEventListener("scroll", () => {
       if (pend) return; pend = true;
-      requestAnimationFrame(() => { document.documentElement.style.setProperty("--sy", Math.min(scrollY, 3000)); pend = false; });
+      requestAnimationFrame(() => { estadio.style.setProperty("--sy", Math.round(Math.min(scrollY, 3000))); pend = false; });
     }, { passive: true });
   }
   // luz que sigue al puntero en los paneles
@@ -1319,7 +1323,8 @@ tr.recien{animation:recien 2.4s ease-out}
       ].filter(Boolean);
     }
     const tira = items.map((t) => `<span>${t}</span>`).join("");
-    $("#cinta").innerHTML = tira + tira;
+    const cinta = $("#cinta"), html = tira + tira;
+    if (cinta.dataset.html !== html) { cinta.innerHTML = html; cinta.dataset.html = html; }
   }
 
   // posiciones de una formación para n jugadores en media cancha
