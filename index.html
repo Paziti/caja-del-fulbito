@@ -134,6 +134,18 @@ h2{font-size:clamp(28px,4vw,40px)}
     repeating-linear-gradient(-45deg,rgba(238,245,239,.10) 0 1px,transparent 1px 14px);
   box-shadow:0 0 40px rgba(255,240,190,.08) inset;transform-origin:50% 0}
 .pelota-zona .arco.sacude{animation:red .7s ease-out}
+.pelota-zona .arco.palo-izq{animation:palo-i .5s ease-out}
+.pelota-zona .arco.palo-der{animation:palo-d .5s ease-out}
+.pelota-zona .arco.travesano{animation:trav .5s ease-out}
+@keyframes palo-i{20%{transform:translateX(-5px) rotate(-.6deg)}45%{transform:translateX(3px)}70%{transform:translateX(-1px)}}
+@keyframes palo-d{20%{transform:translateX(5px) rotate(.6deg)}45%{transform:translateX(-3px)}70%{transform:translateX(1px)}}
+@keyframes trav{20%{transform:translateY(-5px)}45%{transform:translateY(3px)}70%{transform:translateY(-1px)}}
+.grito{position:absolute;left:50%;top:34%;z-index:3;translate:-50% 0;font:400 46px/1 var(--mano);white-space:nowrap;pointer-events:none;opacity:0;text-shadow:0 4px 0 rgba(0,0,0,.5)}
+.grito.g-gol{color:var(--accent)}
+.grito.g-palo{color:#fff}
+.grito.g-afuera{color:#ff8a83}
+.grito.ver{animation:grito 1.3s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes grito{0%{opacity:0;transform:scale(.3) rotate(-10deg)}20%{opacity:1;transform:scale(1.1) rotate(-4deg)}35%{transform:scale(1) rotate(-4deg)}80%{opacity:1}100%{opacity:0;transform:translateY(-20px) rotate(-4deg)}}
 @keyframes red{20%{transform:scale(1.02,1.04)}45%{transform:scale(.99,.98)}70%{transform:scale(1.005,1.01)}}
 .pelota-zona .piso{position:absolute;left:0;right:0;bottom:16px;height:2px;background:linear-gradient(90deg,transparent,rgba(238,245,239,.5),transparent)}
 .sombra{position:absolute;bottom:10px;width:86px;height:14px;border-radius:50%;background:radial-gradient(rgba(0,0,0,.7),transparent 70%);animation:sombra 1.1s infinite}
@@ -462,7 +474,8 @@ td.cero{color:var(--efectivo)}
         <div class="salto" id="salto" role="button" tabindex="0" aria-label="Patear la pelota">
           <div class="patada" id="patada"><svg class="pelota" viewBox="0 0 100 100" aria-hidden="true" data-pelota></svg></div>
         </div>
-        <div class="pelota-pista" id="pelota-pista">Tocala<b id="goles">0</b>goles</div>
+        <div class="pelota-pista" id="pelota-pista">Tocala y pateá<b id="goles">0</b><span id="tiros">goles</span></div>
+        <div class="grito" id="grito" aria-live="polite"></div>
       </div>
     </div>
 
@@ -687,30 +700,79 @@ td.cero{color:var(--efectivo)}
   document.querySelectorAll("[data-pelota]").forEach((s, i) => (s.innerHTML = pelotaSVG("pb" + i)));
   document.querySelectorAll("[data-pelota-mini]").forEach((s, i) => (s.innerHTML = pelotaSVG("pm" + i)));
 
-  let goles = 0, pateando = false;
-  function patear(fuerte = true) {
+  // patear: cuando la toca alguien puede ser gol, palo o afuera. Los festejos (pagos, equipos, caja cerrada) siempre son gol.
+  let goles = 0, tiros = 0, pateando = false;
+  const azar = (min, max) => min + Math.random() * (max - min);
+  function gritar(texto, clase) {
+    const g = $("#grito");
+    g.textContent = texto;
+    g.className = "grito " + clase;
+    void g.offsetWidth;
+    g.classList.add("ver");
+  }
+  function sacudir(clase) {
+    const arco = $("#arco");
+    arco.classList.remove("sacude", "palo-izq", "palo-der", "travesano");
+    void arco.offsetWidth;
+    arco.classList.add(clase);
+  }
+  function patear(fuerte = true, alAzar = false) {
     if (reduceMotion || pateando) return;
     pateando = true;
-    const zona = $("#pelota-zona");
-    const ancho = zona.clientWidth;
-    const dir = Math.random() < 0.5 ? -1 : 1;
-    const dx = dir * Math.min(ancho * 0.28, 120);
-    const anim = $("#patada").animate([
-      { transform: "translate(0,0) rotate(0) scale(1)" },
-      { transform: `translate(${dx * 0.6}px,-${fuerte ? 150 : 90}px) rotate(${dir * 400}deg) scale(.85)`, offset: 0.35 },
-      { transform: `translate(${dx}px,-60px) rotate(${dir * 640}deg) scale(.7)`, offset: 0.55 },
-      { transform: `translate(${dx * 0.4}px,-30px) rotate(${dir * 900}deg) scale(.9)`, offset: 0.8 },
-      { transform: "translate(0,0) rotate(1080deg) scale(1)" },
-    ], { duration: fuerte ? 1300 : 1000, easing: "cubic-bezier(.25,.8,.35,1)" });
+    // la pelota deja de picar mientras vuela, así apunta bien
+    const quietos = [$("#salto"), $(".pelota"), $("#sombra")];
+    quietos.forEach((el) => (el.style.animationPlayState = "paused"));
+    const arco = $("#arco").getBoundingClientRect();
+    const bola = $("#patada").getBoundingClientRect();
+    const cx = bola.left + bola.width / 2, cy = bola.top + bola.height / 2;
+    const r = Math.random();
+    const resultado = !alAzar ? "gol" : r < 0.5 ? "gol" : r < 0.78 ? "palo" : "afuera";
+    const giro = (Math.random() < 0.5 ? -1 : 1) * 720;
+    const T = (x, y, rot, esc, op = 1) => ({ transform: `translate(${x - cx}px,${y - cy}px) rotate(${rot}deg) scale(${esc})`, opacity: op });
+    const inicio = T(cx, cy, 0, 1);
+    let cuadros, dur, impacto;
+
+    if (resultado === "gol") {
+      const x = azar(arco.left + arco.width * 0.2, arco.right - arco.width * 0.2);
+      const y = azar(arco.top + arco.height * 0.25, arco.top + arco.height * 0.55);
+      cuadros = [inicio, { ...T(x, y, giro * 0.6, 0.5), offset: 0.4 }, { ...T(x + azar(-10, 10), arco.bottom - 22, giro * 0.75, 0.5), offset: 0.62 },
+        { ...T(x, arco.bottom - 22, giro * 0.8, 0.5, 0), offset: 0.8 }, { ...T(cx, cy + 40, giro, 0.8, 0), offset: 0.81 }, T(cx, cy, giro, 1)];
+      dur = fuerte ? 1500 : 1200; impacto = 0.4;
+    } else if (resultado === "palo") {
+      const donde = ["izq", "der", "arriba"][Math.floor(Math.random() * 3)];
+      let x, y, rx, ry;
+      if (donde === "arriba") { x = azar(arco.left + arco.width * 0.25, arco.right - arco.width * 0.25); y = arco.top + 2; rx = x + azar(-60, 60); ry = arco.top - 70; }
+      else { x = donde === "izq" ? arco.left + 2 : arco.right - 2; y = azar(arco.top + arco.height * 0.3, arco.bottom - arco.height * 0.25); rx = x + (donde === "izq" ? -1 : 1) * azar(50, 90); ry = y + 30; }
+      cuadros = [inicio, { ...T(x, y, giro * 0.5, 0.55), offset: 0.38 }, { ...T(rx, ry, giro * 0.3, 0.8), offset: 0.6, easing: "ease-out" },
+        { ...T(rx, cy, giro * 0.1, 0.95), offset: 0.8, easing: "ease-in" }, T(cx, cy, 0, 1)];
+      dur = 1500; impacto = 0.38;
+      setTimeout(() => sacudir(donde === "arriba" ? "travesano" : "palo-" + donde), dur * impacto);
+    } else {
+      const lado = Math.random();
+      let x, y;
+      if (lado < 0.33) { x = arco.left - azar(40, 90); y = azar(arco.top, arco.top + arco.height * 0.6); }
+      else if (lado < 0.66) { x = arco.right + azar(40, 90); y = azar(arco.top, arco.top + arco.height * 0.6); }
+      else { x = azar(arco.left, arco.right); y = arco.top - azar(50, 90); }
+      cuadros = [inicio, { ...T(x, y, giro * 0.6, 0.4), offset: 0.45 }, { ...T(x + (x - cx) * 0.3, y - 30, giro * 0.8, 0.25, 0), offset: 0.62 },
+        { ...T(cx, cy + 60, giro, 0.8, 0), offset: 0.63 }, T(cx, cy, giro, 1)];
+      dur = 1500; impacto = 0.45;
+    }
+
+    // cada tramo con su propia curva: así el impacto cae justo en su momento
+    const anim = $("#patada").animate(cuadros.map((k) => ({ easing: "cubic-bezier(.3,.6,.4,1)", ...k })), { duration: dur });
     setTimeout(() => {
-      $("#arco").classList.remove("sacude"); void $("#arco").offsetWidth; $("#arco").classList.add("sacude");
-    }, (fuerte ? 1300 : 1000) * 0.5);
-    anim.onfinish = () => { pateando = false; };
-    goles++;
+      if (resultado === "gol") { sacudir("sacude"); if (alAzar) gritar("¡Gooool!", "g-gol"); }
+      if (resultado === "palo") gritar("¡Palo!", "g-palo");
+      if (resultado === "afuera") gritar(["¡Afuera!", "¡A la tribuna!", "¡Uhhh!"][Math.floor(Math.random() * 3)], "g-afuera");
+    }, dur * impacto);
+    anim.onfinish = () => { pateando = false; quietos.forEach((el) => (el.style.animationPlayState = "")); };
+    if (resultado === "gol") goles++;
+    if (alAzar) tiros++;
     rodar($("#goles"), goles);
+    $("#tiros").textContent = tiros ? `de ${tiros} ${tiros === 1 ? "tiro" : "tiros"}` : "goles";
   }
-  $("#salto").addEventListener("click", () => patear(true));
-  $("#salto").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); patear(true); } });
+  $("#salto").addEventListener("click", () => patear(true, true));
+  $("#salto").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); patear(true, true); } });
 
   // ---------- efectos ----------
   // parallax del fondo (líneas de cal y césped se mueven más lento que la página)
