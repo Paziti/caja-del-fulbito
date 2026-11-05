@@ -312,6 +312,16 @@ select option,select optgroup{background:#0b1d12}
 .segmentado .punto{width:12px;height:12px;border-radius:50%}
 .segmentado input:checked+label{border-color:var(--accent);background:rgba(255,212,71,.10);color:var(--tiza);transform:translateY(-2px)}
 .segmentado input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+/* "¿a quién más le pagaste?": aparece cuando el monto alcanza para dos o más */
+.otros{display:flex;flex-wrap:wrap;gap:6px;max-height:190px;overflow:auto;padding:2px}
+.otros input{position:absolute;width:1px;height:1px;min-height:0;opacity:0;pointer-events:none}
+.otros label{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:7px 12px;border-radius:999px;border:1px solid var(--borde-2);background:rgba(0,0,0,.25);font-size:13px;font-weight:700;color:var(--tiza-2);cursor:pointer;transition:all .2s}
+.otros label::before{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--tiza-3);transition:all .2s}
+.otros input:checked+label{border-color:var(--accent);background:rgba(255,212,71,.12);color:var(--tiza)}
+.otros input:checked+label::before{background:var(--accent);border-color:var(--accent)}
+.otros input:disabled+label{opacity:.4;cursor:not-allowed}
+.otros input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+.pagado-por{display:block;font-size:11px;font-weight:600;color:var(--tiza-3)}
 .filtros{display:flex;gap:4px;padding:4px;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid var(--borde)}
 .filtros button{border:0;background:none;padding:8px 13px;border-radius:9px;font-size:13px;font-weight:700;color:var(--tiza-3);cursor:pointer;transition:all .2s}
 .filtros button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
@@ -611,6 +621,11 @@ tr.recien{animation:recien 2.4s ease-out}
           <div class="campo" id="campo-monto">
             <label for="j-monto">Monto</label>
             <input id="j-monto" type="number" inputmode="numeric" min="0" step="100" placeholder="8500">
+          </div>
+          <div class="campo" id="campo-otros" hidden>
+            <span class="etiqueta">¿A quién más le pagaste?</span>
+            <p class="nota" id="otros-nota"></p>
+            <div class="otros" id="otros-lista"></div>
           </div>
           <button class="btn primario" type="submit" id="btn-guardar">Avisar que pagué</button>
         </form>
@@ -916,7 +931,8 @@ tr.recien{animation:recien 2.4s ease-out}
         if (!datos.pinConfigurado) esOrganizador = true;
         render();
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       $("#vivo").classList.add("caido");
       $("#vivo-txt").textContent = "Sin conexión";
     }
@@ -984,11 +1000,12 @@ tr.recien{animation:recien 2.4s ease-out}
       return;
     }
     // misma forma: se prenden y apagan los leds, dígito por dígito
-    const svgs = el.querySelectorAll("svg");
+    // un elemento por carácter ($ es un span, no un svg): ir por children para no correr los índices
+    const piezas = el.children;
     chars.forEach((ch, i) => {
-      if (!/\d/.test(ch)) return;
+      if (!/\d/.test(ch) || !piezas[i]) return;
       const on = PRENDIDAS[+ch];
-      svgs[i].querySelectorAll("circle").forEach((cir, k) => {
+      piezas[i].querySelectorAll("circle").forEach((cir, k) => {
         cir.style.transitionDelay = reduceMotion ? "0s" : i * 45 + "ms";
         cir.classList.toggle("on", on[k]);
       });
@@ -1524,7 +1541,7 @@ tr.recien{animation:recien 2.4s ease-out}
       const pago = j.estado === "pagado";
       return `<tr class="${norm(j.nombre) === yo ? "yo" : ""}${nuevos.has(j.id) ? " recien" : ""}" data-id="${esc(j.id)}">
         <td class="n">${i + 1}</td>
-        <td class="nombre">${esc(j.nombre)}${norm(j.nombre) === yo ? "<small>Vos</small>" : ""}</td>
+        <td class="nombre">${esc(j.nombre)}${norm(j.nombre) === yo ? "<small>Vos</small>" : ""}${pago && j.pagadoPor ? `<span class="pagado-por">le pagó ${esc(j.pagadoPor)}</span>` : ""}</td>
         <td><span class="pill ${pago ? "pagado" : "debe"}">${pago ? "Pagó" : "Debe"}</span></td>
         <td>${pago ? `<span class="metodo"><i style="background:${COLOR[j.metodo]}"></i>${NOMBRE_METODO[j.metodo]}</span>` : "—"}</td>
         <td class="num">${pago ? pesos(j.monto) : pesos(p.precio)}</td>
@@ -1706,8 +1723,8 @@ tr.recien{animation:recien 2.4s ease-out}
     const js = p ? p.jugadores : [];
     const vacio = !js.length;
     $("#form-vacio").hidden = !vacio;
-    formJ.querySelectorAll(".campo, #btn-guardar").forEach((el) => (el.hidden = vacio));
-    if (vacio) return;
+    formJ.querySelectorAll(".campo:not(#campo-otros), #btn-guardar").forEach((el) => (el.hidden = vacio));
+    if (vacio) { $("#campo-otros").hidden = true; return; }
     if (formJ.contains(document.activeElement)) return; // no pisar lo que está eligiendo
     const elegido = sel.value || store.get("miNombre") || "";
     const deben = js.filter((j) => j.estado === "debe");
@@ -1718,13 +1735,34 @@ tr.recien{animation:recien 2.4s ease-out}
     const previo = js.find((j) => j.id === elegido || norm(j.nombre) === norm(elegido));
     sel.value = previo && previo.estado === "debe" ? previo.id : "";
     $("#j-monto").placeholder = p.precio ? String(p.precio) : "";
+    renderOtros();
   }
-  async function guardarJugador(j, msg) {
+  // si el monto alcanza para dos o más (con $8.500, desde $17.000), elegís a quién más le pagaste
+  function renderOtros() {
+    const p = partido();
+    const caja = $("#campo-otros");
+    const monto = Number($("#j-monto").value) || 0;
+    const cuantos = p && p.precio ? Math.floor(monto / p.precio) - 1 : 0;
+    const yo = $("#j-nombre").value;
+    const candidatos = p ? p.jugadores.filter((j) => j.estado === "debe" && j.id !== yo) : [];
+    if (cuantos < 1 || !candidatos.length) { caja.hidden = true; $("#otros-lista").innerHTML = ""; return; }
+    caja.hidden = false;
+    const marcados = new Set([...document.querySelectorAll("#otros-lista input:checked")].map((i) => i.value).filter((id) => id !== yo));
+    while (marcados.size > cuantos) marcados.delete([...marcados].pop());
+    $("#otros-lista").innerHTML = candidatos.map((j) =>
+      `<input type="checkbox" id="o-${esc(j.id)}" value="${esc(j.id)}"${marcados.has(j.id) ? " checked" : ""}${!marcados.has(j.id) && marcados.size >= cuantos ? " disabled" : ""}><label for="o-${esc(j.id)}">${esc(j.nombre)}</label>`).join("");
+    $("#otros-nota").textContent = `Con ${pesos(monto)} cubrís a ${cuantos === 1 ? "1 más" : `${cuantos} más`}. Marcados: ${marcados.size} de ${cuantos}.`;
+  }
+  $("#j-monto").addEventListener("input", renderOtros);
+  $("#j-nombre").addEventListener("change", renderOtros);
+  $("#otros-lista").addEventListener("change", renderOtros);
+  async function guardarJugador(j, msg, otros = []) {
     const p = partido();
     if (!p) return toast("Primero el organizador tiene que crear el partido.", true);
     if (j.id) propios.add(j.id);
+    otros.forEach((id) => propios.add(id));
     try {
-      const r = await api("guardarJugador", { partidoId: p.id, jugador: j });
+      const r = await api("guardarJugador", { partidoId: p.id, jugador: j, otros });
       toast(msg || `Listo, ${r.jugador.nombre} quedó como pagado`);
       await cargar();
       return true;
@@ -1736,13 +1774,17 @@ tr.recien{animation:recien 2.4s ease-out}
     const j = p && p.jugadores.find((x) => x.id === $("#j-nombre").value);
     if (!j) return toast("Elegí tu nombre de la lista.", true);
     store.set("miNombre", j.nombre);
+    const otros = $("#campo-otros").hidden ? [] : [...document.querySelectorAll("#otros-lista input:checked")].map((i) => i.value);
+    const nombresOtros = otros.map((id) => p.jugadores.find((x) => x.id === id)?.nombre).filter(Boolean);
     const ok = await guardarJugador({
       id: j.id,
       nombre: j.nombre,
       estado: "pagado",
       metodo: formJ.metodo.value,
       monto: Number($("#j-monto").value) || p.precio,
-    }, `¡Gracias, ${j.nombre}! Quedó anotado tu pago`);
+    }, nombresOtros.length
+      ? `¡Gracias, ${j.nombre}! Quedó anotado tu pago y el de ${nombresOtros.join(", ").replace(/, ([^,]*)$/, " y $1")}`
+      : `¡Gracias, ${j.nombre}! Quedó anotado tu pago`, otros);
     if (ok) { $("#j-monto").value = ""; document.activeElement.blur(); renderFormPago(); }
   });
 

@@ -55,8 +55,25 @@ export default async function handler(req, res) {
         const p = await leerPartido(body.partidoId);
         if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
         // sin PIN solo se puede avisar que pagaste, y solo si estás en la lista
-        const r = await guardarJugador(p, { ...(body.jugador || {}), origen: pinOk ? "organizador" : "web" }, { soloLista: !pinOk });
-        return res.status(200).json({ ok: true, jugador: r.jugador, actualizado: r.actualizado });
+        const jug = { ...(body.jugador || {}), origen: pinOk ? "organizador" : "web" };
+        // pagó también por otros: el monto tiene que alcanzar para todos y se reparte en partes iguales
+        const lista = await leerJugadores(p.id);
+        const otros = [...new Set(Array.isArray(body.otros) ? body.otros.map((x) => txt(x, 20)) : [])]
+          .map((id) => lista.find((x) => x.id === id))
+          .filter((x) => x && x.id !== jug.id && x.estado === "debe")
+          .slice(0, 39);
+        if (otros.length) {
+          const total = Number(jug.monto) || 0;
+          if (p.precio && total < p.precio * (otros.length + 1)) {
+            return res.status(400).json({ error: `Con ${total.toLocaleString("es-AR")} no alcanza para ${otros.length + 1} (son ${(p.precio * (otros.length + 1)).toLocaleString("es-AR")}).` });
+          }
+          jug.monto = Math.round(total / (otros.length + 1));
+        }
+        const r = await guardarJugador(p, jug, { soloLista: !pinOk });
+        for (const o of otros) {
+          await guardarJugador(p, { id: o.id, nombre: o.nombre, estado: "pagado", metodo: jug.metodo, monto: jug.monto, origen: jug.origen, pagadoPor: r.jugador.nombre }, { soloLista: !pinOk });
+        }
+        return res.status(200).json({ ok: true, jugador: r.jugador, actualizado: r.actualizado, otros: otros.map((o) => o.nombre) });
       }
 
       case "cargarLista": {
