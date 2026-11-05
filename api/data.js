@@ -90,6 +90,20 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, ...r });
       }
 
+      case "guardarSuplentes": {
+        exigePin();
+        const p = await leerPartido(body.partidoId);
+        if (!p) return res.status(404).json({ error: "Ese partido ya no existe." });
+        const vistos = new Set();
+        p.suplentes = String(body.nombres || "")
+          .split(/[\n,;]+/)
+          .map((s) => txt(s.replace(/^\s*\d+\s*[.\-)]?\s*/, ""), 40))
+          .filter((n) => n && !vistos.has(n.toLowerCase()) && vistos.add(n.toLowerCase()))
+          .slice(0, 8);
+        await redis([["HSET", K_PARTIDOS, p.id, JSON.stringify(p)]]);
+        return res.status(200).json({ ok: true, partido: p });
+      }
+
       case "borrarJugador": {
         exigePin();
         await redis([["HDEL", kJug(txt(body.partidoId, 20)), txt(body.id, 20)]]);

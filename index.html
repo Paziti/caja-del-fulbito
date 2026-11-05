@@ -266,6 +266,21 @@ h2{font-size:clamp(28px,4vw,40px)}
 .tok-pech{fill:rgba(255,212,71,.94);stroke:#7a5a00;stroke-width:1}
 .tok-pech + .tok-num{fill:#1d1600}
 @media (max-width:700px){.equipos{grid-template-columns:1fr}.acc-equipos .btn{flex:1 1 auto}.acc-equipos .btn.primario{flex-basis:100%}}
+/* banquito de suplentes */
+.banquito{position:relative;margin:18px auto 0;max-width:560px;padding:14px 18px 0}
+.banq-techo{position:absolute;inset:0 0 26px;border:2px solid rgba(190,225,255,.28);border-bottom:0;border-radius:60px 60px 0 0;background:linear-gradient(180deg,rgba(170,215,255,.13),rgba(170,215,255,.02) 70%);pointer-events:none}
+.banq-tit{position:relative;display:block;text-align:center;font:400 20px/1 var(--mano);color:var(--accent);transform:rotate(-2deg);margin-bottom:6px}
+.banq-gente{position:relative;display:flex;justify-content:center;flex-wrap:wrap;gap:4px 14px;min-height:62px;align-items:flex-end;padding:0 6px}
+.banq-sup{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px;animation:banq-entra .5s cubic-bezier(.3,1.5,.5,1) both}
+.banq-sup svg{width:40px;height:38px;overflow:visible}
+.banq-sup .cam{fill:#8fa79a;stroke:#06110b;stroke-width:2;stroke-linejoin:round}
+.banq-sup text{font:800 italic 12px var(--texto);fill:#06110b}
+.banq-sup span{max-width:90px;padding:2px 8px;border-radius:999px;background:rgba(4,12,7,.82);font:600 11px/1.4 var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banq-vacio{align-self:center;font-size:13px;color:var(--tiza-3);text-align:center}
+.banq-tabla{position:relative;height:12px;margin:2px -6px 0;border-radius:4px;background:repeating-linear-gradient(90deg,#9a6a3c 0 38px,#8a5c32 38px 40px),#9a6a3c;box-shadow:inset 0 -3px 0 rgba(0,0,0,.3),0 4px 8px rgba(0,0,0,.4)}
+.banq-patas{position:relative;display:flex;justify-content:space-between;padding:0 10%;height:14px}
+.banq-patas i{width:6px;background:#5a3a1e;border-radius:0 0 2px 2px}
+@keyframes banq-entra{from{opacity:0;transform:translateY(-14px)}}
 .pie-cancha{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--tiza-3)}
 
 /* dona */
@@ -582,6 +597,7 @@ tr.recien{animation:recien 2.4s ease-out}
         <div class="sec-tit"><div><div class="etiqueta">Formación</div><h2>La cancha</h2></div>
           <div class="acc-equipos"><button class="btn primario" type="button" id="btn-equipos">Armar equipos</button><button class="btn" type="button" id="btn-copiar-equipos" hidden>Copiar equipos</button><button class="btn chico peligro" type="button" id="btn-sacar-equipos" hidden>Borrar equipos</button><span class="nota" id="equipos-nota"></span></div></div>
         <div id="cancha"></div>
+        <div class="banquito" id="banquito" hidden></div>
         <div class="equipos" id="equipos" hidden></div>
         <div class="pie-cancha"><span id="cancha-nota"></span><span>Color = cómo pagó · Borde rojo = debe</span></div>
       </div>
@@ -696,6 +712,13 @@ tr.recien{animation:recien 2.4s ease-out}
             </div>
             <p class="nota">Se agregan los que no estén. Los que ya están anotados no se tocan. Para sacar a alguien, usá Borrar en la planilla.</p>
             <button class="btn primario" type="submit">Cargar lista</button>
+          </form>
+          <form id="form-suplentes" class="anotarse" style="margin-top:22px">
+            <div class="campo">
+              <label for="s-nombres">Suplentes (van al banquito, no cuentan en la caja)</label>
+              <textarea id="s-nombres" rows="3" placeholder="Un nombre por renglón"></textarea>
+            </div>
+            <button class="btn" type="submit">Guardar suplentes</button>
           </form>
         </div>
         <div class="panel">
@@ -1321,6 +1344,7 @@ tr.recien{animation:recien 2.4s ease-out}
         ult ? `Último pago: <b>${esc(ult.nombre)}</b> (${NOMBRE_METODO[ult.metodo]})` : "",
         st.deben.length ? `Deben: <b>${esc(st.deben.map((j) => j.nombre).join(", "))}</b>` : "",
         st.libres ? `Quedan <b>${st.libres}</b> lugares` : "",
+        (p.suplentes || []).length ? `En el banco: <b>${esc(p.suplentes.join(", "))}</b>` : "",
         p.resultado ? `Resultado: <b>${esc(p.resultado)}</b>` : "",
       ].filter(Boolean);
     }
@@ -1412,7 +1436,7 @@ tr.recien{animation:recien 2.4s ease-out}
     if (t.id === "btn-copiar-equipos" && p) {
       const eq = equiposDe(p); if (!eq) return;
       const nom = (ids) => ids.map((id) => p.jugadores.find((j) => j.id === id)?.nombre).filter(Boolean).join(", ");
-      copiar(`⚽ Equipos ${fechaLarga(p)}\n🟡 ${N_EQ[0]}: ${nom(eq.a)}\n⚪ ${N_EQ[1]}: ${nom(eq.b)}`, "Equipos copiados. Pegalos en el grupo.");
+      copiar(`⚽ Equipos ${fechaLarga(p)}\n🟡 ${N_EQ[0]}: ${nom(eq.a)}\n⚪ ${N_EQ[1]}: ${nom(eq.b)}${(p.suplentes || []).length ? `\n🪑 Suplentes: ${p.suplentes.join(", ")}` : ""}`, "Equipos copiados. Pegalos en el grupo.");
     }
   });
 
@@ -1479,8 +1503,22 @@ tr.recien{animation:recien 2.4s ease-out}
     $("#cancha").innerHTML = svg;
     $("#cancha").dataset.vertical = vertical ? "1" : "";
     mezclado = false;
+    renderBanquito(p);
     renderEquipos(p, eq, st, vertical);
     $("#cancha-nota").textContent = `${st.js.length} anotados · ${st.libres} libres`;
+  }
+
+  function renderBanquito(p) {
+    const box = $("#banquito"), sup = p.suplentes || [];
+    box.hidden = !sup.length && !esOrganizador;
+    if (box.hidden) return;
+    const firma = sup.join("|");
+    if (box.dataset.firma === firma) return; // no redibujar (ni repetir la animación) si no cambió
+    box.dataset.firma = firma;
+    const gente = sup.length
+      ? sup.map((n, i) => `<figure class="banq-sup" style="animation-delay:${i * 80}ms" title="${esc(n)} (suplente)"><svg viewBox="-17 -17 34 32" aria-hidden="true"><path class="cam" d="${CAM}"/><text y="5.5" text-anchor="middle">S${i + 1}</text></svg><span>${esc(n)}</span></figure>`).join("")
+      : `<span class="banq-vacio">Banco vacío. Cargá suplentes en el modo organizador.</span>`;
+    box.innerHTML = `<div class="banq-techo"></div><span class="banq-tit">${sup.length === 1 ? "El suplente" : "Los suplentes"}</span><div class="banq-gente">${gente}</div><div class="banq-tabla"></div><div class="banq-patas"><i></i><i></i></div>`;
   }
 
   function renderDona() {
@@ -1631,7 +1669,12 @@ tr.recien{animation:recien 2.4s ease-out}
     if (modoOrg === "editar" && !p) modoOrg = "nuevo";
     llenarFormPartido();
     $("#lista-partido").textContent = p ? `Partido del ${fechaLarga(p)} · ${p.jugadores.length}/${p.cupo} anotados` : "Primero creá un partido";
-    document.querySelectorAll("#form-lista button, #form-video button").forEach((b) => (b.disabled = !p));
+    document.querySelectorAll("#form-lista button, #form-video button, #form-suplentes button").forEach((b) => (b.disabled = !p));
+    const sN = $("#s-nombres"), sFirma = (p?.id || "") + "|" + (p?.suplentes || []).join("|");
+    if (document.activeElement !== sN && sN.dataset.firma !== sFirma) {
+      sN.value = (p?.suplentes || []).join("\n");
+      sN.dataset.firma = sFirma;
+    }
   }
 
   function llenarFormPartido() {
@@ -1811,6 +1854,17 @@ tr.recien{animation:recien 2.4s ease-out}
       const r = await api("cargarLista", { partidoId: p.id, nombres: $("#l-nombres").value });
       $("#l-nombres").value = "";
       toast(`Listo: ${r.agregados} agregados${r.yaEstaban ? `, ${r.yaEstaban} ya estaban` : ""}`);
+      await cargar();
+    } catch (err) { toast(err.message, true); }
+  });
+
+  $("#form-suplentes").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const p = partido(); if (!p) return;
+    try {
+      const r = await api("guardarSuplentes", { partidoId: p.id, nombres: $("#s-nombres").value });
+      const n = r.partido.suplentes.length;
+      toast(n ? `Listo: ${n} ${n === 1 ? "suplente" : "suplentes"} en el banco` : "Banco vacío");
       await cargar();
     } catch (err) { toast(err.message, true); }
   });
