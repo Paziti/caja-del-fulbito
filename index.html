@@ -176,13 +176,13 @@ h2{font-size:clamp(28px,4vw,40px)}
 .kpi.principal p{margin:8px 0 0;color:var(--tiza-2);font-size:13px}
 .kpi.ok strong{color:var(--efectivo)}
 .kpi.falta strong{color:#ff8a83}
-/* tablero de cambios: segmentos hechos de leds redondos, los apagados se ven grises */
-.led{display:inline-flex;align-items:flex-end;gap:.17em;
-  -webkit-mask:radial-gradient(circle,#000 56%,transparent 64%) 0 0/.058em .058em;
-  mask:radial-gradient(circle,#000 56%,transparent 64%) 0 0/.058em .058em}
+/* tablero de cambios: cada número es una placa gris llena de leds, con dos huecos oscuros.
+   Los leds apagados se ven grises; los prendidos, del color del dato. */
+.led{display:inline-flex;align-items:flex-end;gap:.11em}
 .led svg{display:block;height:1em;width:auto;overflow:visible}
-.led polygon,.led rect{fill:rgba(238,245,239,.065);transition:fill .22s ease}
-.led .on{fill:currentColor}
+.led .placa{fill:rgba(205,212,208,.075)}
+.led circle{fill:rgba(225,232,228,.15);transition:fill .2s ease,r .2s ease}
+.led circle.on{fill:currentColor;r:.44px}
 .led-sim{font:800 .42em/1 var(--texto);align-self:flex-start;margin-right:.08em;margin-top:.08em}
 .celdas{display:grid;grid-template-columns:repeat(var(--n,18),1fr);gap:5px;margin-top:16px;position:relative}
 .celda{height:14px;border-radius:4px;background:var(--libre);transition:background .4s}
@@ -814,23 +814,23 @@ td.cero{color:var(--efectivo)}
     toast._t = setTimeout(() => t.classList.remove("ver"), 2800);
   }
 
-  // números de tablero de cambios: siete segmentos de leds; al cambiar, los segmentos se prenden y apagan
-  const SEG = (() => {
-    // segmentos rectos con la esquina apenas cortada, como las placas de leds del cartel
-    const t = 16, g = 2.6, k = 2.2, L = 8, R = 54, T = 8, M = 50, B = 92;
-    const caja = (x1, x2, y1, y2) => `${x1 + k},${y1} ${x2 - k},${y1} ${x2},${y1 + k} ${x2},${y2 - k} ${x2 - k},${y2} ${x1 + k},${y2} ${x1},${y2 - k} ${x1},${y1 + k}`;
-    const h = (y) => caja(L + t / 2 + g, R - t / 2 - g, y - t / 2, y + t / 2);
-    const v = (x, y1, y2) => caja(x - t / 2, x + t / 2, y1, y2);
-    const arriba = [T - t / 2, M - g / 2], abajo = [M + g / 2, B + t / 2];
-    // orden: a b c d e f g
-    return [h(T), v(R, ...arriba), v(R, ...abajo), h(B), v(L, ...abajo), v(L, ...arriba), h(M)];
-  })();
+  // números de tablero de cambios: grilla de 7 x 14 leds por dígito.
+  // Los segmentos son bloques que comparten las esquinas, como en el cartel real.
+  const LW = 7, LH = 14;
+  const ZONA = { a: (c, r) => r <= 1, d: (c, r) => r >= 12, g: (c, r) => r === 6 || r === 7,
+    f: (c, r) => c <= 1 && r <= 7, e: (c, r) => c <= 1 && r >= 6, b: (c, r) => c >= 5 && r <= 7, c: (c, r) => c >= 5 && r >= 6 };
   const DIGITOS = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
-  const prende = (d, k) => DIGITOS[d].includes("abcdefg"[k]);
-  function ledChar(c) {
-    if (/\d/.test(c)) return `<svg viewBox="0 0 62 100" aria-hidden="true">${SEG.map((pts, k) => `<polygon points="${pts}"${prende(+c, k) ? ' class="on"' : ""}/>`).join("")}</svg>`;
-    if (c === "." || c === ",") return `<svg viewBox="0 0 14 100" aria-hidden="true"><rect class="on" x="1" y="86" width="12" height="12"/></svg>`;
-    return `<span class="led-sim" aria-hidden="true">${esc(c)}</span>`;
+  const CELDAS = []; // celdas que forman la placa (todo menos los dos huecos)
+  for (let r = 0; r < LH; r++) for (let c = 0; c < LW; c++) if ("abcdefg".split("").some((z) => ZONA[z](c, r))) CELDAS.push([c, r]);
+  const PRENDIDAS = DIGITOS.map((segs) => CELDAS.map(([c, r]) => segs.split("").some((z) => ZONA[z](c, r))));
+  const PLACA = "M0,0H7V14H0Z M2,2H5V6H2Z M2,8H5V12H2Z";
+  function ledChar(ch) {
+    if (/\d/.test(ch)) {
+      const on = PRENDIDAS[+ch];
+      return `<svg viewBox="-.1 -.1 7.2 14.2" aria-hidden="true"><path class="placa" fill-rule="evenodd" d="${PLACA}"/>${CELDAS.map(([c, r], i) => `<circle cx="${c + .5}" cy="${r + .5}" r=".36"${on[i] ? ' class="on"' : ""}/>`).join("")}</svg>`;
+    }
+    if (ch === "." || ch === ",") return `<svg viewBox="-.1 -.1 2.2 14.2" aria-hidden="true"><rect class="placa" x="0" y="12" width="2" height="2"/>${[[0, 12], [1, 12], [0, 13], [1, 13]].map(([c, r]) => `<circle class="on" cx="${c + .5}" cy="${r + .5}" r=".36"/>`).join("")}</svg>`;
+    return `<span class="led-sim" aria-hidden="true">${esc(ch)}</span>`;
   }
   function rodar(el, texto) {
     texto = String(texto);
@@ -843,13 +843,14 @@ td.cero{color:var(--efectivo)}
       el.innerHTML = chars.map(ledChar).join("");
       return;
     }
-    // misma forma: solo cambian los segmentos, con un pequeño escalonado entre dígitos
+    // misma forma: se prenden y apagan los leds, dígito por dígito
     const svgs = el.querySelectorAll("svg");
-    chars.forEach((c, i) => {
-      if (!/\d/.test(c)) return;
-      svgs[i].querySelectorAll("polygon").forEach((pol, k) => {
-        pol.style.transitionDelay = reduceMotion ? "0s" : i * 45 + "ms";
-        pol.classList.toggle("on", prende(+c, k));
+    chars.forEach((ch, i) => {
+      if (!/\d/.test(ch)) return;
+      const on = PRENDIDAS[+ch];
+      svgs[i].querySelectorAll("circle").forEach((cir, k) => {
+        cir.style.transitionDelay = reduceMotion ? "0s" : i * 45 + "ms";
+        cir.classList.toggle("on", on[k]);
       });
     });
   }
