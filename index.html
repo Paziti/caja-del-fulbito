@@ -177,11 +177,11 @@ h2{font-size:clamp(28px,4vw,40px)}
 .kpi.ok strong{color:var(--efectivo)}
 .kpi.falta strong{color:#ff8a83}
 /* tablero de cambios: segmentos hechos de leds redondos, los apagados se ven grises */
-.led{display:inline-flex;align-items:flex-end;gap:.07em;
+.led{display:inline-flex;align-items:flex-end;gap:.17em;
   -webkit-mask:radial-gradient(circle,#000 56%,transparent 64%) 0 0/.058em .058em;
   mask:radial-gradient(circle,#000 56%,transparent 64%) 0 0/.058em .058em}
 .led svg{display:block;height:1em;width:auto;overflow:visible}
-.led polygon,.led rect{fill:rgba(238,245,239,.085);transition:fill .22s ease}
+.led polygon,.led rect{fill:rgba(238,245,239,.065);transition:fill .22s ease}
 .led .on{fill:currentColor}
 .led-sim{font:800 .42em/1 var(--texto);align-self:flex-start;margin-right:.08em;margin-top:.08em}
 .celdas{display:grid;grid-template-columns:repeat(var(--n,18),1fr);gap:5px;margin-top:16px;position:relative}
@@ -390,7 +390,8 @@ td.cero{color:var(--efectivo)}
   .panel{padding:16px;border-radius:16px}
   .tablero{padding:14px;border-radius:16px}
   .kpi{padding:12px 14px}
-  .kpi strong{font-size:min(25px,6.4vw)}
+  .kpi strong{font-size:min(22px,5.7vw)}
+  .led{gap:.12em}
   .celdas{gap:3px}
   .celda{height:12px}
   .vivo span{display:none}
@@ -815,11 +816,14 @@ td.cero{color:var(--efectivo)}
 
   // números de tablero de cambios: siete segmentos de leds; al cambiar, los segmentos se prenden y apagan
   const SEG = (() => {
-    const t = 17, g = 2.4, L = 8.5, R = 53.5, T = 8.5, M = 50, B = 91.5;
-    const h = (x1, x2, y) => `${x1},${y} ${x1 + t / 2},${y - t / 2} ${x2 - t / 2},${y - t / 2} ${x2},${y} ${x2 - t / 2},${y + t / 2} ${x1 + t / 2},${y + t / 2}`;
-    const v = (x, y1, y2) => `${x},${y1} ${x + t / 2},${y1 + t / 2} ${x + t / 2},${y2 - t / 2} ${x},${y2} ${x - t / 2},${y2 - t / 2} ${x - t / 2},${y1 + t / 2}`;
+    // segmentos rectos con la esquina apenas cortada, como las placas de leds del cartel
+    const t = 16, g = 2.6, k = 2.2, L = 8, R = 54, T = 8, M = 50, B = 92;
+    const caja = (x1, x2, y1, y2) => `${x1 + k},${y1} ${x2 - k},${y1} ${x2},${y1 + k} ${x2},${y2 - k} ${x2 - k},${y2} ${x1 + k},${y2} ${x1},${y2 - k} ${x1},${y1 + k}`;
+    const h = (y) => caja(L + t / 2 + g, R - t / 2 - g, y - t / 2, y + t / 2);
+    const v = (x, y1, y2) => caja(x - t / 2, x + t / 2, y1, y2);
+    const arriba = [T - t / 2, M - g / 2], abajo = [M + g / 2, B + t / 2];
     // orden: a b c d e f g
-    return [h(L + g, R - g, T), v(R, T + g, M - g), v(R, M + g, B - g), h(L + g, R - g, B), v(L, M + g, B - g), v(L, T + g, M - g), h(L + g, R - g, M)];
+    return [h(T), v(R, ...arriba), v(R, ...abajo), h(B), v(L, ...abajo), v(L, ...arriba), h(M)];
   })();
   const DIGITOS = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
   const prende = (d, k) => DIGITOS[d].includes("abcdefg"[k]);
