@@ -710,8 +710,8 @@ tr.recien{animation:recien 2.4s ease-out}
               <label for="l-nombres">Pegá la lista, un nombre por renglón</label>
               <textarea id="l-nombres" rows="8" placeholder="1. Luis&#10;2. Diego&#10;3. Juan&#10;…"></textarea>
             </div>
-            <p class="nota">Se agregan los que no estén. Los que ya están anotados no se tocan. Para sacar a alguien, usá Borrar en la planilla.</p>
-            <button class="btn primario" type="submit">Cargar lista</button>
+            <p class="nota">La lista nueva reemplaza a la anterior: los que no estén se sacan. Los que siguen y ya pagaron mantienen el pago.</p>
+            <button class="btn primario" type="submit">Reemplazar lista</button>
           </form>
           <form id="form-suplentes" class="anotarse" style="margin-top:22px">
             <div class="campo">
@@ -1853,7 +1853,7 @@ tr.recien{animation:recien 2.4s ease-out}
     try {
       const r = await api("cargarLista", { partidoId: p.id, nombres: $("#l-nombres").value });
       $("#l-nombres").value = "";
-      toast(`Listo: ${r.agregados} agregados${r.yaEstaban ? `, ${r.yaEstaban} ya estaban` : ""}`);
+      toast(`Lista nueva: ${r.total} jugadores${r.agregados ? ` · ${r.agregados} nuevos` : ""}${r.sacados ? ` · ${r.sacados} sacados` : ""}${r.conservanPago ? ` · ${r.conservanPago} ya pagaron` : ""}`);
       await cargar();
     } catch (err) { toast(err.message, true); }
   });
