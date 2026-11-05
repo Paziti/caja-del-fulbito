@@ -1060,7 +1060,7 @@ td.cero{color:var(--efectivo)}
     box.innerHTML = [eq.a, eq.b].map((ids, k) => `<div class="equipo ${k ? "b" : "a"}"><h3>${N_EQ[k]}<small>${ids.length} · ${lado[k]}</small></h3><ol>${lista(ids)}</ol></div>`).join("");
   }
   // la hora de habilitación llega sola: se revisa cada 20 s
-  setInterval(() => { const p = partido(); if (p && !p.equipos) renderCancha(); }, 20000);
+  setInterval(() => { const p = partido(); if (p && !p.equipos) renderCancha(); renderRanking(); }, 20000);
   document.addEventListener("click", async (e) => {
     const t = e.target.closest("button");
     if (!t) return;
@@ -1244,7 +1244,8 @@ td.cero{color:var(--efectivo)}
 
   function renderRanking() {
     const tabla = new Map();
-    datos.partidos.forEach((p) => p.jugadores.forEach((j) => {
+    // solo cuentan las fechas que ya empezaron: un partido de mañana no suma "jugó" ni deuda
+    datos.partidos.filter((p) => inicio(p) <= Date.now()).forEach((p) => p.jugadores.forEach((j) => {
       const k = norm(j.nombre);
       const r = tabla.get(k) || { nombre: j.nombre, jugo: 0, pago: 0, deuda: 0 };
       r.jugo++;
@@ -1254,7 +1255,7 @@ td.cero{color:var(--efectivo)}
     const filas = [...tabla.values()].sort((a, b) => b.deuda - a.deuda || b.jugo - a.jugo || a.nombre.localeCompare(b.nombre));
     $("#ranking").innerHTML = filas.length
       ? filas.slice(0, 40).map((r) => `<tr><td class="nombre">${esc(r.nombre)}</td><td class="num">${r.jugo}</td><td class="num">${r.pago}</td><td class="num ${r.deuda ? "deuda" : "cero"}">${r.deuda ? pesos(r.deuda) : "Al día"}</td></tr>`).join("")
-      : `<tr><td colspan="4" class="vacio">Se arma sola con las fechas que se vayan jugando.</td></tr>`;
+      : `<tr><td colspan="4" class="vacio">Se arma sola cuando se juegue la primera fecha.</td></tr>`;
   }
 
   function renderHistorial() {
