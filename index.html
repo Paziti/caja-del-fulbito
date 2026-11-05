@@ -1534,7 +1534,7 @@ tr.recien{animation:recien 2.4s ease-out}
       const r = await api("subirSuplente", { partidoId: p.id, nombre, saleId: saleId || null });
       $("#banq-cambio").hidden = true;
       silbato(2);
-      toast(r.sale ? `🔁 Cambio: entra ${r.jugador.nombre}, sale ${r.sale}` : `⬆ ${r.jugador.nombre} pasa a titular`);
+      toast(r.sale ? `🔁 Cambio: entra ${r.jugador.nombre}, ${r.sale} va al banco` : `⬆ ${r.jugador.nombre} pasa a titular`);
       await cargar();
     } catch (err) { toast(err.message, true); }
   }
