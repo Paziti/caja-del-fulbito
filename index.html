@@ -151,6 +151,8 @@ h2{font-size:clamp(28px,4vw,40px)}
 .sombra{position:absolute;bottom:10px;width:86px;height:14px;border-radius:50%;background:radial-gradient(rgba(0,0,0,.7),transparent 70%);animation:sombra 1.1s infinite}
 .salto{position:relative;z-index:2;margin-bottom:18px;animation:salto 1.1s infinite;cursor:pointer}
 .patada{will-change:transform}
+/* mientras vuela la pelota queda redonda: el aplastado de pique se congela sin aplicarse */
+.volando .pelota{transform:none!important}
 .pelota{display:block;width:104px;height:104px;transform-origin:50% 100%;animation:aplasta 1.1s infinite;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
 .pelota .gira{transform-origin:50px 50px;animation:girar 3.3s linear infinite}
 @keyframes salto{0%,100%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.6,.35,1)}50%{transform:translateY(-170px);animation-timing-function:cubic-bezier(.65,0,.8,.4)}}
@@ -722,6 +724,7 @@ td.cero{color:var(--efectivo)}
     // la pelota deja de picar mientras vuela, así apunta bien
     const quietos = [$("#salto"), $(".pelota"), $("#sombra")];
     quietos.forEach((el) => (el.style.animationPlayState = "paused"));
+    $("#pelota-zona").classList.add("volando");
     const arco = $("#arco").getBoundingClientRect();
     const bola = $("#patada").getBoundingClientRect();
     const cx = bola.left + bola.width / 2, cy = bola.top + bola.height / 2;
@@ -765,7 +768,7 @@ td.cero{color:var(--efectivo)}
       if (resultado === "palo") gritar("¡Palo!", "g-palo");
       if (resultado === "afuera") gritar(["¡Afuera!", "¡A la tribuna!", "¡Uhhh!"][Math.floor(Math.random() * 3)], "g-afuera");
     }, dur * impacto);
-    anim.onfinish = () => { pateando = false; quietos.forEach((el) => (el.style.animationPlayState = "")); };
+    anim.onfinish = () => { pateando = false; $("#pelota-zona").classList.remove("volando"); quietos.forEach((el) => (el.style.animationPlayState = "")); };
     if (resultado === "gol") goles++;
     if (alAzar) tiros++;
     rodar($("#goles"), goles);
