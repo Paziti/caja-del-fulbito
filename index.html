@@ -146,7 +146,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 @keyframes sombra{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.45);opacity:.35}}
 @keyframes girar{to{transform:rotate(360deg)}}
 .pelota-pista{position:absolute;top:8px;right:8px;font:400 16px/1.2 var(--mano);transform:rotate(4deg);color:var(--tiza-3);text-align:right;transition:opacity .4s}
-.pelota-pista b{display:block;color:var(--accent);font:600 34px/1 var(--marcador);margin:4px 0;text-shadow:0 0 12px rgba(255,212,71,.5)}
+.pelota-pista b{display:flex;justify-content:flex-end;color:var(--accent);font-size:38px;line-height:1;margin:6px 0;filter:drop-shadow(0 0 8px rgba(255,212,71,.55))}
 
 /* ---------- botones ---------- */
 .btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--borde-2);background:rgba(238,245,239,.05);font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s,transform .2s cubic-bezier(.3,1.5,.5,1)}
@@ -169,16 +169,21 @@ h2{font-size:clamp(28px,4vw,40px)}
 .tablero::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(rgba(255,255,255,.035) 1px,transparent 1.4px) 0 0/5px 5px}
 .kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:12px;position:relative}
 .kpi{padding:16px 18px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid var(--borde);min-width:0}
-.kpi strong{display:block;font:600 clamp(28px,3.4vw,42px)/1 var(--marcador);filter:drop-shadow(0 0 8px color-mix(in srgb,currentColor 40%,transparent));margin-top:10px;letter-spacing:.01em;white-space:nowrap}
-.kpi.principal strong{font-size:clamp(56px,7vw,88px);color:var(--accent);filter:drop-shadow(0 0 14px rgba(255,212,71,.45))}
-.kpi.principal small{font-size:.42em;color:var(--tiza-3);margin-left:4px}
+.kpi strong{display:flex;align-items:flex-end;font-size:clamp(28px,2.9vw,40px);line-height:1;filter:drop-shadow(0 0 6px color-mix(in srgb,currentColor 55%,transparent));margin-top:12px;white-space:nowrap}
+.kpi.principal strong{font-size:clamp(64px,7.5vw,96px);color:var(--accent);filter:drop-shadow(0 0 12px rgba(255,212,71,.5))}
+.kpi.principal small{display:inline-flex;align-items:flex-end;gap:.12em;font-size:.4em;color:var(--tiza-2);margin-left:.25em;filter:none}
+.kpi.principal small .barra-led{font:600 1em/1 var(--texto);color:var(--tiza-3)}
 .kpi.principal p{margin:8px 0 0;color:var(--tiza-2);font-size:13px}
 .kpi.ok strong{color:var(--efectivo)}
 .kpi.falta strong{color:#ff8a83}
-/* dígitos que ruedan */
-.dg{display:inline-block;height:1em;overflow:hidden;vertical-align:top}
-.dg .col{display:flex;flex-direction:column;transition:transform .9s cubic-bezier(.2,.9,.25,1.1)}
-.dg .col span{height:1em;line-height:1;text-align:center}
+/* tablero de cambios: segmentos hechos de leds redondos, los apagados se ven grises */
+.led{display:inline-flex;align-items:flex-end;gap:.07em;
+  -webkit-mask:radial-gradient(circle,#000 56%,transparent 64%) 0 0/.058em .058em;
+  mask:radial-gradient(circle,#000 56%,transparent 64%) 0 0/.058em .058em}
+.led svg{display:block;height:1em;width:auto;overflow:visible}
+.led polygon,.led rect{fill:rgba(238,245,239,.085);transition:fill .22s ease}
+.led .on{fill:currentColor}
+.led-sim{font:800 .42em/1 var(--texto);align-self:flex-start;margin-right:.08em;margin-top:.08em}
 .celdas{display:grid;grid-template-columns:repeat(var(--n,18),1fr);gap:5px;margin-top:16px;position:relative}
 .celda{height:14px;border-radius:4px;background:var(--libre);transition:background .4s}
 .celda.mp{background:var(--mp)}.celda.banco{background:var(--banco)}.celda.efectivo{background:var(--efectivo)}
@@ -241,7 +246,7 @@ h2{font-size:clamp(28px,4vw,40px)}
 .dona-graf.dibujar svg{animation:dona 1.2s cubic-bezier(.3,.9,.3,1) both}
 @keyframes dona{from{transform:rotate(-270deg) scale(.5);opacity:0}to{transform:rotate(-90deg) scale(1);opacity:1}}
 .dona-centro{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-.dona-centro strong{font:600 30px/1 var(--marcador)}
+.dona-centro strong{font:400 34px/1 var(--display)}
 .dona-centro span{font-size:11px;color:var(--tiza-3);text-transform:uppercase;letter-spacing:.12em}
 .dona ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .dona li{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;font-size:14px}
@@ -334,7 +339,7 @@ td.cero{color:var(--efectivo)}
 .fecha-card .info small{color:var(--tiza-3);font-weight:400}
 .barrita{display:block;height:4px;border-radius:2px;background:var(--libre);margin-top:8px;overflow:hidden}
 .barrita i{display:block;height:100%;background:var(--accent);border-radius:inherit}
-.fecha-card .pct{font:600 20px var(--marcador)}
+.fecha-card .pct{font:400 24px var(--display)}
 
 /* ---------- organizador ---------- */
 #organizador .envoltura{display:grid;gap:16px}
@@ -385,7 +390,7 @@ td.cero{color:var(--efectivo)}
   .panel{padding:16px;border-radius:16px}
   .tablero{padding:14px;border-radius:16px}
   .kpi{padding:12px 14px}
-  .kpi strong{font-size:23px}
+  .kpi strong{font-size:min(25px,6.4vw)}
   .celdas{gap:3px}
   .celda{height:12px}
   .vivo span{display:none}
@@ -464,7 +469,7 @@ td.cero{color:var(--efectivo)}
       <div class="kpis">
         <div class="kpi principal">
           <span class="etiqueta">Pagaron</span>
-          <strong aria-live="polite"><span id="t-pagaron">0</span><small>/<span id="t-cupo">18</span></small></strong>
+          <strong aria-live="polite"><span id="t-pagaron">0</span><small><span class="barra-led">/</span><span id="t-cupo">18</span></small></strong>
           <p id="t-led-sub"></p>
         </div>
         <div class="kpi ok"><span class="etiqueta">Recaudado</span><strong id="t-recaudado">$0</strong></div>
@@ -701,7 +706,7 @@ td.cero{color:var(--efectivo)}
     }, (fuerte ? 1300 : 1000) * 0.5);
     anim.onfinish = () => { pateando = false; };
     goles++;
-    $("#goles").textContent = goles;
+    rodar($("#goles"), goles);
   }
   $("#salto").addEventListener("click", () => patear(true));
   $("#salto").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); patear(true); } });
@@ -808,28 +813,40 @@ td.cero{color:var(--efectivo)}
     toast._t = setTimeout(() => t.classList.remove("ver"), 2800);
   }
 
-  // números de tablero: cada dígito rueda hasta su valor
+  // números de tablero de cambios: siete segmentos de leds; al cambiar, los segmentos se prenden y apagan
+  const SEG = (() => {
+    const t = 17, g = 2.4, L = 8.5, R = 53.5, T = 8.5, M = 50, B = 91.5;
+    const h = (x1, x2, y) => `${x1},${y} ${x1 + t / 2},${y - t / 2} ${x2 - t / 2},${y - t / 2} ${x2},${y} ${x2 - t / 2},${y + t / 2} ${x1 + t / 2},${y + t / 2}`;
+    const v = (x, y1, y2) => `${x},${y1} ${x + t / 2},${y1 + t / 2} ${x + t / 2},${y2 - t / 2} ${x},${y2} ${x - t / 2},${y2 - t / 2} ${x - t / 2},${y1 + t / 2}`;
+    // orden: a b c d e f g
+    return [h(L + g, R - g, T), v(R, T + g, M - g), v(R, M + g, B - g), h(L + g, R - g, B), v(L, M + g, B - g), v(L, T + g, M - g), h(L + g, R - g, M)];
+  })();
+  const DIGITOS = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
+  const prende = (d, k) => DIGITOS[d].includes("abcdefg"[k]);
+  function ledChar(c) {
+    if (/\d/.test(c)) return `<svg viewBox="0 0 62 100" aria-hidden="true">${SEG.map((pts, k) => `<polygon points="${pts}"${prende(+c, k) ? ' class="on"' : ""}/>`).join("")}</svg>`;
+    if (c === "." || c === ",") return `<svg viewBox="0 0 14 100" aria-hidden="true"><rect class="on" x="1" y="86" width="12" height="12"/></svg>`;
+    return `<span class="led-sim" aria-hidden="true">${esc(c)}</span>`;
+  }
   function rodar(el, texto) {
     texto = String(texto);
     el.setAttribute("aria-label", texto);
-    if (reduceMotion) { el.textContent = texto; return; }
+    el.classList.add("led");
     const chars = [...texto];
-    const misma = el.dataset.forma === chars.map((c) => (/\d/.test(c) ? "0" : c)).join("");
-    if (!misma) {
-      el.dataset.forma = chars.map((c) => (/\d/.test(c) ? "0" : c)).join("");
-      const primera = el.dataset.v === undefined;
-      el.innerHTML = chars.map((c) => /\d/.test(c)
-        ? `<span class="dg" aria-hidden="true"><span class="col" style="transform:translateY(${primera ? -c : 0}em)">${"0123456789".split("").map((d) => `<span>${d}</span>`).join("")}</span></span>`
-        : `<span aria-hidden="true">${c}</span>`).join("");
-      if (primera) { el.dataset.v = texto; return; }
-      void el.offsetWidth;
+    const forma = chars.map((c) => (/\d/.test(c) ? "0" : c)).join("");
+    if (el.dataset.forma !== forma) {
+      el.dataset.forma = forma;
+      el.innerHTML = chars.map(ledChar).join("");
+      return;
     }
-    el.dataset.v = texto;
-    let i = 0;
-    el.querySelectorAll(".col").forEach((col) => {
-      while (!/\d/.test(chars[i])) i++;
-      col.style.transform = `translateY(${-chars[i]}em)`;
-      i++;
+    // misma forma: solo cambian los segmentos, con un pequeño escalonado entre dígitos
+    const svgs = el.querySelectorAll("svg");
+    chars.forEach((c, i) => {
+      if (!/\d/.test(c)) return;
+      svgs[i].querySelectorAll("polygon").forEach((pol, k) => {
+        pol.style.transitionDelay = reduceMotion ? "0s" : i * 45 + "ms";
+        pol.classList.toggle("on", prende(+c, k));
+      });
     });
   }
 
@@ -908,7 +925,7 @@ td.cero{color:var(--efectivo)}
       $("#t-meta").innerHTML = `<span>El organizador crea el partido desde el modo organizador, al pie de la página.</span>`;
       $("#t-celdas").innerHTML = "";
       ["#t-recaudado", "#t-objetivo", "#t-falta"].forEach((s) => rodar($(s), "$0"));
-      rodar($("#t-pagaron"), "0"); $("#t-cupo").textContent = "18";
+      rodar($("#t-pagaron"), "0"); rodar($("#t-cupo"), "18");
       $("#t-led-sub").textContent = "";
       $("#t-destacados").innerHTML = "";
       return;
@@ -924,7 +941,7 @@ td.cero{color:var(--efectivo)}
       p.resultado ? `<span>Resultado&nbsp;<b>${esc(p.resultado)}</b></span>` : "",
     ].join("");
     rodar($("#t-pagaron"), st.pag.length);
-    $("#t-cupo").textContent = p.cupo;
+    rodar($("#t-cupo"), p.cupo);
     $("#t-led-sub").textContent = st.pag.length === p.cupo ? "Pagaron todos. Caja cerrada." : `${st.deben.length} deben · ${st.libres} ${st.libres === 1 ? "lugar libre" : "lugares libres"}`;
     rodar($("#t-recaudado"), pesos(st.recaudado));
     rodar($("#t-objetivo"), pesos(st.objetivo));
@@ -1481,6 +1498,7 @@ td.cero{color:var(--efectivo)}
 
   // arranque
   if (store.get("pin")) api("verificarPin").then(() => { esOrganizador = true; render(); }).catch(() => store.del("pin"));
+  rodar($("#goles"), 0);
   cargar();
 })();
 </script>
