@@ -816,8 +816,8 @@ td.cero{color:var(--efectivo)}
 
   // números de tablero de cambios: siete segmentos de leds; al cambiar, los segmentos se prenden y apagan
   const SEG = (() => {
-    // segmentos rectos con la esquina apenas cortada, como las placas de leds del cartel
-    const t = 16, g = 2.6, k = 2.2, L = 8, R = 54, T = 8, M = 50, B = 92;
+    // segmentos con las puntas biseladas: ni flecha ni bloque, como las placas de leds del cartel
+    const t = 16, g = 2.8, k = 5, L = 8, R = 54, T = 8, M = 50, B = 92;
     const caja = (x1, x2, y1, y2) => `${x1 + k},${y1} ${x2 - k},${y1} ${x2},${y1 + k} ${x2},${y2 - k} ${x2 - k},${y2} ${x1 + k},${y2} ${x1},${y2 - k} ${x1},${y1 + k}`;
     const h = (y) => caja(L + t / 2 + g, R - t / 2 - g, y - t / 2, y + t / 2);
     const v = (x, y1, y2) => caja(x - t / 2, x + t / 2, y1, y2);
