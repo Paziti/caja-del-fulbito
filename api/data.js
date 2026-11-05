@@ -4,7 +4,7 @@
 import { randomInt } from "node:crypto";
 import {
   inicioPartido, MIN_ANTES_EQUIPOS, leerJugadores,
-  redis, K_PARTIDOS, kJug, almacenamiento, txt, limpiarPartido, leerPartido, leerTodo, guardarJugador, cargarLista, subirSuplente, norm,
+  redis, K_PARTIDOS, kJug, almacenamiento, txt, limpiarPartido, leerPartido, leerTodo, guardarJugador, cargarLista, subirSuplente,
 } from "../lib/store.js";
 
 const PIN = (process.env.ADMIN_PIN || "").trim();
@@ -100,9 +100,6 @@ export default async function handler(req, res) {
           .map((s) => txt(s.replace(/^\s*\d+\s*[.\-)]?\s*/, ""), 40))
           .filter((n) => n && !vistos.has(n.toLowerCase()) && vistos.add(n.toLowerCase()))
           .slice(0, 8);
-        // las fichas guardadas solo valen para los que siguen en el banco
-        const enBanco = new Set(p.suplentes.map(norm));
-        p.guardados = Object.fromEntries(Object.entries(p.guardados || {}).filter(([k]) => enBanco.has(k)));
         await redis([["HSET", K_PARTIDOS, p.id, JSON.stringify(p)]]);
         return res.status(200).json({ ok: true, partido: p });
       }
