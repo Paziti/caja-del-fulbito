@@ -993,7 +993,9 @@ tr.recien{animation:recien 2.4s ease-out}
   }
   const fechaLarga = (p) => new Date(p.fecha + "T12:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
   const hora = (iso) => iso ? new Date(iso).toLocaleString("es-AR", { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }) : "—";
-  const esFuturo = (p) => new Date(p.fecha + "T" + p.hora) > new Date(Date.now() - 3 * 3600e3);
+  // el partido dura una hora: pasada la hora de inicio + DURACION ya es "Partido jugado"
+  const DURACION = 3600e3;
+  const esFuturo = (p) => new Date(`${p.fecha}T${p.hora}:00-03:00`).getTime() + DURACION > Date.now();
 
   function toast(msg, error = false) {
     const t = $("#toast");
@@ -1097,10 +1099,9 @@ tr.recien{animation:recien 2.4s ease-out}
     const p = partido(), box = $("#cuenta");
     if (!p) { box.hidden = true; return; }
     const ms = inicio(p) - Date.now();
-    if (ms <= -2 * 3600e3) { box.hidden = true; return; }
     box.hidden = false;
     box.classList.toggle("jugando", ms <= 0);
-    $("#cuenta-tit").textContent = ms <= 0 ? "¡Se está jugando!" : "Faltan";
+    $("#cuenta-tit").textContent = ms > 0 ? "Faltan" : ms > -DURACION ? "¡Se está jugando!" : "Partido jugado";
     if (ms <= 0) return;
     const min = Math.floor(ms / 60e3);
     const dd = (n) => String(n).padStart(2, "0");
